@@ -11,13 +11,13 @@ class Face(Element):
 
     # Constructor for Face
     def __init__(self, *pts):
+        # Assign unique ID to Face using counter
+        self.id = next(self.id_iter)
+
         # Initialize the vertices
         self.pts = pts
         if len(pts) < 3:
             raise Exception("Not enough vertices for Face: {}".format(self.id))
-
-        # Assign unique ID to Face using counter
-        self.id = next(self.id_iter)
 
         # Call superclass constructor
         super().__init__()
@@ -50,3 +50,17 @@ class Face(Element):
     def normal(self, ref_):
         n_ = self.n_ if self.n_.dot(self.r_ - ref_) > 0.0 else -self.n_
         return n_
+
+    # Checks if the vertices of the Face are the same as the arguments
+    def is_same_vertices(self, *pts):
+        # Check if number of vertices are the same
+        if len(pts) != len(self.pts):
+            return False
+
+        # Check if each query vertex is in the Faces vertices
+        for pt in pts:
+            if not any([np.allclose(pt, vtx) for vtx in self.pts]):
+                return False
+
+        # Return True since query points are vertices of the Face
+        return True
