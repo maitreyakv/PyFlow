@@ -50,26 +50,3 @@ class Face(Element):
     def normal(self, ref_):
         n_ = self.n_ if self.n_.dot(self.r_ - ref_) > 0.0 else -self.n_
         return n_
-
-    # String representation of Face instance
-    def __str__(self):
-        # Initialize string representation with ID
-        string = "Face {}:\n".format(self.id)
-
-        # Add vertices to string
-        string += "\n".join(["  pt.{}: {}".format(i, pt) for i, pt in enumerate(self.pts)])
-
-        # Add normal vector to string
-        string += "\n  n_: {}".format(self.n_)
-
-        # Add area to string
-        string += "\n  area: {}".format(self.area)
-
-        # Add normal vector to string
-        string += "\n  n_: {}".format(self.n_)
-
-        # Add normal vector to string
-        string += "\n  c_: {}".format(self.r_)
-
-        # Return string representation
-        return string
