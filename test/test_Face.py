@@ -51,5 +51,17 @@ class TestFace(unittest.TestCase):
     def test_set_cell_2(self):
         self.assertEqual(self.f6.left_cell, self.c1)
 
+    def test_is_same_vertices_1(self):
+        test_vertices = [np.array([0., 0., 2.]), np.array([0., 2., 0.]), np.array([2., 0., 0.])]
+        self.assertTrue(self.f1.is_same_vertices(*test_vertices))
+
+    def test_is_same_vertices_2(self):
+        test_vertices = [np.array([0., 0., 2.]), np.array([0., 4., 0.]), np.array([2., 0., 0.])]
+        self.assertFalse(self.f1.is_same_vertices(*test_vertices))
+
+    def test_is_same_vertices_3(self):
+        test_vertices = [np.array([0., 0., 2.]), np.array([2., 0., 0.])]
+        self.assertFalse(self.f1.is_same_vertices(*test_vertices))
+
 if __name__ == '__main__':
     unittest.main()
