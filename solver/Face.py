@@ -29,14 +29,22 @@ class Face(Element):
         # Compute the surface area of the Face
         self.area = abs(0.5 * self.n_.dot(sum([np.cross(pts[i], pts[i+1]) for i in range(len(pts)-1)])))
 
+        # Initialize the left and righr cells to None
+        self.left_cell = None
+        self.right_cell = None
+
     # TODO: Add doc for function
     def compute_centroid(self):
         return sum(self.pts) / len(self.pts)
 
     # Sets the left or right Cell of the Face
     def set_cell(self, cell):
-        # TODO: implement and test
-        pass
+        # If the Cell is on the right side of the face, set is as the right Cell
+        if self.n_.dot(cell.r_ - self.r_) > 0.0:
+            self.right_cell = cell
+        # Otherwise set the Cell as the left Cell
+        else:
+            self.left_cell = cell
 
     # Returns the normal unit vector of the Face, pointing away from a reference point
     def normal(self, ref_):
