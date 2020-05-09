@@ -61,7 +61,7 @@ class Face(Element):
     # Implements equality function
     def __eq__(self, other):
         # Return whether all the nodes are equal
-        return all([node in other.nodes for node in self.nodes]) and self.size == other.size
+        return self.has_nodes(other.nodes)
 
     # Implement hash function
     def __hash__(self):
