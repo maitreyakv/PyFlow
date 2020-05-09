@@ -7,19 +7,13 @@ from solver.Element import Element
 # TODO: Add doc for class
 class Cell(Element, ABC):
 
-    # Counter for ID given to each Cell instance
-    id_iter = itertools.count()
-
     # Constructor for Cell
     def __init__(self, *faces):
-        # Assign unique ID to Cell using counter
-        self.id = next(self.id_iter)
-
         # Initialize the Faces
         self.faces = faces
 
         # Obtain set of vertices
-        self.pts = list({str(pt): pt for face in faces for pt in face.pts}.values())
+        self.nodes = tuple({node for face in faces for node in face.nodes})
 
         # Call superclass constructor
         super().__init__()
@@ -28,7 +22,8 @@ class Cell(Element, ABC):
         self.vol = self.compute_volume()
 
         # Add the Cell to each Face
-        for face in faces: face.set_cell(self)
+        for face in faces:
+            face.set_cell(self)
 
     @abstractmethod
     def compute_centroid(self):

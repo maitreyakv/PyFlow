@@ -6,28 +6,22 @@ from solver.Element import Element
 # TODO: Add doc for class
 class Face(Element):
 
-    # Counter for ID given to each Face instance
-    id_iter = itertools.count()
-
     # Constructor for Face
-    def __init__(self, *pts):
-        # Assign unique ID to Face using counter
-        self.id = next(self.id_iter)
-
+    def __init__(self, *nodes):
         # Initialize the vertices
-        self.pts = pts
-        if len(pts) < 3:
-            raise Exception("Not enough vertices for Face: {}".format(self.id))
+        self.nodes = tuple(sorted(list(nodes), key=lambda x: hash(x)))
+        if len(nodes) < 3:
+            raise Exception("Not enough vertices for Face")
 
         # Call superclass constructor
         super().__init__()
 
         # Compute the normal vector
-        self.n_ = np.cross(pts[1] - pts[0], pts[2] - pts[0])
+        self.n_ = np.cross(nodes[1].r_ - nodes[0].r_, nodes[2].r_ - nodes[0].r_)
         self.n_ /= np.linalg.norm(self.n_)
 
         # Compute the surface area of the Face
-        self.area = abs(0.5 * self.n_.dot(sum([np.cross(pts[i], pts[i+1]) for i in range(len(pts)-1)])))
+        self.area = abs(0.5 * self.n_.dot(sum([np.cross(nodes[i].r_, nodes[i+1].r_) for i in range(len(nodes)-1)])))
 
         # Initialize the left and righr cells to None
         self.left_cell = None
@@ -35,7 +29,7 @@ class Face(Element):
 
     # TODO: Add doc for function
     def compute_centroid(self):
-        return sum(self.pts) / len(self.pts)
+        return sum([node.r_ for node in self.nodes]) / len(self.nodes)
 
     # Sets the left or right Cell of the Face
     def set_cell(self, cell):
@@ -51,16 +45,19 @@ class Face(Element):
         n_ = self.n_ if self.n_.dot(self.r_ - ref_) > 0.0 else -self.n_
         return n_
 
-    # Checks if the vertices of the Face are the same as the arguments
-    def is_same_vertices(self, *pts):
-        # Check if number of vertices are the same
-        if len(pts) != len(self.pts):
+    # Implements equality function
+    def __eq__(self, other):
+        # Check if other object is of type Face
+        if not isinstance(other, type(self)):
             return False
 
-        # Check if each query vertex is in the Faces vertices
-        for pt in pts:
-            if not any([np.allclose(pt, vtx) for vtx in self.pts]):
-                return False
+        # Check if the other Face has the same number of vertices
+        if len(self.nodes) != len(other.nodes):
+            return False
 
-        # Return True since query points are vertices of the Face
-        return True
+        # Return whether all the nodes are equal
+        return all([node in other.nodes for node in self.nodes])
+
+    # Implement hash function
+    def __hash__(self):
+        return hash(self.nodes)

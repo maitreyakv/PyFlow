@@ -1,15 +1,21 @@
 import unittest
 import numpy as np
 
-from solver.TetrahedronCell import TetrahedronCell
+from solver.Node import Node
 from solver.Face import Face
+from solver.TetrahedronCell import TetrahedronCell
 
 class TestTetrahedronCell(unittest.TestCase):
 
-    f1 = Face(np.array([0., 0., 0.]), np.array([1., 0., 0.]), np.array([0., 1., 0.]))
-    f2 = Face(np.array([0., 0., 0.]), np.array([1., 0., 0.]), np.array([0., 0., 1.]))
-    f3 = Face(np.array([0., 0., 0.]), np.array([0., 1., 0.]), np.array([0., 0., 1.]))
-    f4 = Face(np.array([1., 0., 0.]), np.array([0., 1., 0.]), np.array([0., 0., 1.]))
+    n1 = Node(0., 0., 0., 101)
+    n2 = Node(1., 0., 0., 102)
+    n3 = Node(0., 1., 0., 103)
+    n4 = Node(0., 0., 1., 104)
+
+    f1 = Face(n1, n2, n3)
+    f2 = Face(n1, n2, n4)
+    f3 = Face(n1, n3, n4)
+    f4 = Face(n2, n3, n4)
     faces = [f1, f2, f3, f4]
     c1 = TetrahedronCell(*faces)
 
