@@ -13,6 +13,9 @@ class Face(Element):
         if len(nodes) < 3:
             raise Exception("Not enough vertices for Face")
 
+        # Save number of vertices
+        self.size = len(nodes)
+
         # Call superclass constructor
         super().__init__()
 
@@ -27,9 +30,13 @@ class Face(Element):
         self.left_cell = None
         self.right_cell = None
 
+        # Add self to the list of Faces in each Node of the Face
+        for node in nodes:
+            node.faces.add(self);
+
     # TODO: Add doc for function
     def compute_centroid(self):
-        return sum([node.r_ for node in self.nodes]) / len(self.nodes)
+        return sum([node.r_ for node in self.nodes]) / self.size
 
     # Sets the left or right Cell of the Face
     def set_cell(self, cell):
@@ -45,18 +52,16 @@ class Face(Element):
         n_ = self.n_ if self.n_.dot(self.r_ - ref_) > 0.0 else -self.n_
         return n_
 
+    # Returns whether the Face has these Nodes
+    # TODO: Test function
+    def has_nodes(self, query_nodes):
+        # Return whether all the nodes in the Face
+        return all([node in self.nodes for node in query_nodes]) and self.size == len(query_nodes)
+
     # Implements equality function
     def __eq__(self, other):
-        # Check if other object is of type Face
-        if not isinstance(other, type(self)):
-            return False
-
-        # Check if the other Face has the same number of vertices
-        if len(self.nodes) != len(other.nodes):
-            return False
-
         # Return whether all the nodes are equal
-        return all([node in other.nodes for node in self.nodes])
+        return all([node in other.nodes for node in self.nodes]) and self.size == other.size
 
     # Implement hash function
     def __hash__(self):

@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from tqdm import tqdm
+import warnings
 
 from solver.Node import Node
 from solver.Face import Face
@@ -15,10 +16,12 @@ class GmshGridReader:
 
     # TODO: Add doc foc function
     def find_or_create_face(self, nodes_face):
+        for node in nodes_face:
+            found_face = node.find_face(nodes_face)
+            if found_face:
+                return found_face
         new_face = Face(*nodes_face)
-        if new_face in self.faces.keys():
-            return self.faces[new_face]
-        self.faces[new_face] = new_face
+        self.faces.append(new_face)
         return new_face
 
     # TODO: Add doc for function
@@ -31,8 +34,8 @@ class GmshGridReader:
         # Initialize a dictionary for the nodes
         self.nodes = {}
 
-        # Initialze a dictionary for the Faces (key and value are same to use as a O(1) list)
-        self.faces = {}
+        # Initialze a list for the Faces
+        self.faces = []
 
         # Initialize a list for the Cells
         self.cells = []
@@ -67,16 +70,12 @@ class GmshGridReader:
                 # Parse Element from file
                 if line[1] == '2':
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
-                    new_face = Face(*face_nodes)
-                    self.faces[new_face] = new_face
+                    self.faces.append(Face(*face_nodes))
                 elif line[1] == '4':
                     nodes_tetra = (self.nodes[n-1] for n in map(int, line[-4:]))
                     faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
                     self.cells.append(TetrahedronCell(*faces_tetra))
-                else:
-                    # Unrecognized Element
-                    raise Exception("Unrecognized Element in Gmsh file")
 
         print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))
 
-        return self.nodes, self.faces.keys(), self.cells
+        return self.nodes, self.faces, self.cells
