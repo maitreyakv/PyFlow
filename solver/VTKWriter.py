@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 import solver
 
 # TODO: Add doc for class
@@ -10,25 +12,25 @@ class VTKWriter:
         pass
 
     # TODO: Add doc for function
-    def write_to_file(self, cells, filename):
+    # TODO: Cleanup code and add comments
+    def write_to_file(self, nodes, cells, filename):
+        print("writing simulation data to VTK file...")
+
         with open(filename, "w") as fp:
             fp.write("# vtk DataFile Version 2.0\ncomment goes here\nASCII\nDATASET UNSTRUCTURED_GRID\n\n")
 
-            nodes = list({str(pt): pt for cell in cells for pt in cell.pts}.values())
-            fp.write("POINTS {} double\n".format(len(nodes)))
-            for i, node in enumerate(nodes):
-                fp.write(" ".join(map(str, node)) + "\n")
+            print("writing mesh data...")
 
-            node_id_map = {str(node): id for id, node in enumerate(nodes)}
-            def node_id(node):
-                return node_id_map[str(node)]
+            fp.write("POINTS {} double\n".format(len(nodes)))
+            for id in range(len(nodes)):
+                fp.write(" ".join(map(str, nodes[id].r_.tolist())) + "\n")
 
             cell_str = ""
             cell_types_str = ""
             cell_section_size = 0
-            for cell in cells:
-                cell_str += "{} ".format(len(cell.pts)) + " ".join(map(str, list(map(node_id, cell.pts)))) + "\n"
-                cell_section_size += len(cell.pts) + 1
+            for cell in tqdm(cells):
+                cell_str += "{} ".format(len(cell.nodes)) + " ".join([str(node.id) for node in cell.nodes]) + "\n"
+                cell_section_size += len(cell.nodes) + 1
                 cell_types_str += "{}\n".format(self.cell_types[type(cell)])
             fp.write("\nCELLS {} {}\n".format(len(cells), cell_section_size))
             fp.write(cell_str)

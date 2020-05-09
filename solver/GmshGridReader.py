@@ -1,6 +1,8 @@
 import itertools
 import numpy as np
+from tqdm import tqdm
 
+from solver.Node import Node
 from solver.Face import Face
 from solver.TetrahedronCell import TetrahedronCell
 
@@ -12,23 +14,25 @@ class GmshGridReader:
         pass
 
     # TODO: Add doc foc function
-    def find_or_create_face(self, pts):
-        for face in self.faces:
-            if face.is_same_vertices(*pts):
-                return face
-        self.faces.append(Face(*pts))
-        return self.faces[-1]
+    def find_or_create_face(self, nodes_face):
+        new_face = Face(*nodes_face)
+        if new_face in self.faces.keys():
+            return self.faces[new_face]
+        self.faces[new_face] = new_face
+        return new_face
 
     # TODO: Add doc for function
     def read_grid_from_file(self, filename):
+        print("reading mesh from Gmsh file...")
+
         # Initialize a variable for a line in the file
         line = ""
 
         # Initialize a dictionary for the nodes
-        nodes = {}
+        self.nodes = {}
 
-        # Initialze a list for the Faces
-        self.faces = []
+        # Initialze a dictionary for the Faces (key and value are same to use as a O(1) list)
+        self.faces = {}
 
         # Initialize a list for the Cells
         self.cells = []
@@ -43,9 +47,10 @@ class GmshGridReader:
             num_nodes = int(fp.readline().strip())
 
             # Read each node from the file into the dictionary
-            for i in range(num_nodes):
+            print("reading nodes...")
+            for i in tqdm(range(num_nodes)):
                 line = fp.readline().strip().split(" ")
-                nodes[i+1] = np.array(line[1:], dtype=np.float64)
+                self.nodes[i] = Node(*line[1:], id=i)
 
             # Read lines until the start of the Elements
             while not "$Elements" in line:
@@ -55,19 +60,23 @@ class GmshGridReader:
             num_elements = int(fp.readline().strip())
 
             # Read the Elements and initialize Faces and Cells
-            for i in range(num_elements):
+            print("reading elements...")
+            for i in tqdm(range(num_elements)):
                 line = fp.readline().strip().split(" ")
 
                 # Parse Element from file
                 if line[1] == '2':
-                    pts = (nodes[n] for n in map(int, line[-3:]))
-                    self.faces.append(Face(*pts))
+                    face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
+                    new_face = Face(*face_nodes)
+                    self.faces[new_face] = new_face
                 elif line[1] == '4':
-                    pts_tetra = (nodes[n] for n in map(int, line[-4:]))
-                    faces_tetra = [self.find_or_create_face(pts) for pts in itertools.combinations(pts_tetra, 3)]
+                    nodes_tetra = (self.nodes[n-1] for n in map(int, line[-4:]))
+                    faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
                     self.cells.append(TetrahedronCell(*faces_tetra))
                 else:
                     # Unrecognized Element
                     raise Exception("Unrecognized Element in Gmsh file")
 
-        return self.faces, self.cells
+        print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))
+
+        return self.nodes, self.faces.keys(), self.cells
