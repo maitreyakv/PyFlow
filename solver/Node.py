@@ -29,7 +29,7 @@ class Node:
     # Implement equality function
     def __eq__(self, other):
         # Check of the other Node has the same coordinates
-        return all(self.r_ == other.r_)
+        return self.x == other.x and self.y == other.y and self.z == other.z
 
     # Implement hash function
     def __hash__(self):

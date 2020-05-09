@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 
+from solver.util import fast_cross
 from solver.Element import Element
 
 # TODO: Add doc for class
@@ -10,8 +11,6 @@ class Face(Element):
     def __init__(self, *nodes):
         # Initialize the vertices
         self.nodes = tuple(sorted(list(nodes), key=lambda x: hash(x)))
-        if len(nodes) < 3:
-            raise Exception("Not enough vertices for Face")
 
         # Save number of vertices
         self.size = len(nodes)
@@ -20,11 +19,11 @@ class Face(Element):
         super().__init__()
 
         # Compute the normal vector
-        self.n_ = np.cross(nodes[1].r_ - nodes[0].r_, nodes[2].r_ - nodes[0].r_)
+        self.n_ = fast_cross(nodes[1].r_ - nodes[0].r_, nodes[2].r_ - nodes[0].r_)
         self.n_ /= np.linalg.norm(self.n_)
 
         # Compute the surface area of the Face
-        self.area = abs(0.5 * self.n_.dot(sum([np.cross(nodes[i].r_, nodes[i+1].r_) for i in range(len(nodes)-1)])))
+        self.area = abs(0.5 * self.n_.dot(sum([fast_cross(nodes[i].r_, nodes[i+1].r_) for i in range(self.size-1)])))
 
         # Initialize the left and righr cells to None
         self.left_cell = None

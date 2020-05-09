@@ -17,7 +17,8 @@ class TestTetrahedronCell(unittest.TestCase):
     f3 = Face(n1, n3, n4)
     f4 = Face(n2, n3, n4)
     faces = [f1, f2, f3, f4]
-    c1 = TetrahedronCell(*faces)
+    nodes = [n1, n2, n3, n4]
+    c1 = TetrahedronCell(faces, nodes)
 
     def test_r_(self):
         self.assertTrue(np.allclose(self.c1.r_, np.array([0.25, 0.25, 0.25])))

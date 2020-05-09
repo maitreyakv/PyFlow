@@ -1,5 +1,3 @@
-from tqdm import tqdm
-
 import solver
 
 # TODO: Add doc for class
@@ -28,7 +26,7 @@ class VTKWriter:
             cell_str = ""
             cell_types_str = ""
             cell_section_size = 0
-            for cell in tqdm(cells):
+            for cell in cells:
                 cell_str += "{} ".format(len(cell.nodes)) + " ".join([str(node.id) for node in cell.nodes]) + "\n"
                 cell_section_size += len(cell.nodes) + 1
                 cell_types_str += "{}\n".format(self.cell_types[type(cell)])

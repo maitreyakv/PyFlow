@@ -35,9 +35,11 @@ class TestFace(unittest.TestCase):
     f9 = Face(n8, n10, n11)
 
     faces_1 = [f3, f4, f5, f6]
+    nodes_1 = [n7, n8, n9, n10]
     faces_2 = [f6, f7, f8, f9]
-    c1 = TetrahedronCell(*faces_1)
-    c2 = TetrahedronCell(*faces_2)
+    nodes_2 = [n7, n8, n10, n11]
+    c1 = TetrahedronCell(faces_1, nodes_1)
+    c2 = TetrahedronCell(faces_2, nodes_2)
 
     f10 = Face(n2, n12, n3)
 

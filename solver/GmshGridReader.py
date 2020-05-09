@@ -51,7 +51,7 @@ class GmshGridReader:
 
             # Read each node from the file into the dictionary
             print("reading nodes...")
-            for i in tqdm(range(num_nodes)):
+            for i in range(num_nodes):
                 line = fp.readline().strip().split(" ")
                 self.nodes[i] = Node(*line[1:], id=i)
 
@@ -72,9 +72,9 @@ class GmshGridReader:
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
                     self.faces.append(Face(*face_nodes))
                 elif line[1] == '4':
-                    nodes_tetra = (self.nodes[n-1] for n in map(int, line[-4:]))
+                    nodes_tetra = [self.nodes[n-1] for n in map(int, line[-4:])]
                     faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
-                    self.cells.append(TetrahedronCell(*faces_tetra))
+                    self.cells.append(TetrahedronCell(faces_tetra, nodes_tetra))
 
         print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))
 

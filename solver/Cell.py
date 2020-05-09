@@ -8,12 +8,12 @@ from solver.Element import Element
 class Cell(Element, ABC):
 
     # Constructor for Cell
-    def __init__(self, *faces):
+    def __init__(self, faces, nodes):
         # Initialize the Faces
         self.faces = faces
 
         # Obtain set of vertices
-        self.nodes = tuple({node for face in faces for node in face.nodes})
+        self.nodes = nodes
 
         # Call superclass constructor
         super().__init__()
