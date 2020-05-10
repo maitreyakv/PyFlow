@@ -5,6 +5,7 @@ import warnings
 
 from solver.Node import Node
 from solver.Face import Face
+from solver.BoundaryFace import BoundaryFace
 from solver.TetrahedronCell import TetrahedronCell
 
 # TODO: Add doc for class
@@ -70,7 +71,7 @@ class GmshGridReader:
                 # Parse Element from file
                 if line[1] == '2':
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
-                    self.faces.append(Face(*face_nodes))
+                    self.faces.append(BoundaryFace(*face_nodes))
                 elif line[1] == '4':
                     nodes_tetra = [self.nodes[n-1] for n in map(int, line[-4:])]
                     faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
