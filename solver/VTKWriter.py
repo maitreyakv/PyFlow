@@ -35,3 +35,10 @@ class VTKWriter:
 
             fp.write("\nCELL_TYPES {}\n".format(len(cells)))
             fp.write(cell_types_str)
+
+            print("writing flow data...")
+            fp.write("CELL_DATA {}\n".format(len(cells)))
+
+            fp.write("VECTORS velocity double\n")
+            for cell in cells:
+                fp.write(" ".join(map(str, cell.flow.W_[1:4] / cell.flow.W_[0])) + '\n')

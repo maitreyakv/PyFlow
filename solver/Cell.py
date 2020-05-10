@@ -2,6 +2,7 @@ import itertools
 import numpy as np
 from abc import ABC, abstractmethod
 
+from solver.Flow import Flow
 from solver.Element import Element
 
 # TODO: Add doc for class
@@ -24,6 +25,9 @@ class Cell(Element, ABC):
         # Add the Cell to each Face
         for face in faces:
             face.set_cell(self)
+
+        # Declare the flow field in this Cell
+        self.flow = Flow()
 
     @abstractmethod
     def compute_centroid(self):
