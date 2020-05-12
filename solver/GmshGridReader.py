@@ -79,4 +79,14 @@ class GmshGridReader:
 
         print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))
 
+        print("creating ghost cells...")
+
+        # Create GhostCells
+        for face in tqdm(self.faces):
+            if isinstance(face, BoundaryFace):
+                new_node_id = len(self.nodes)
+                ghost_cell, new_node = face.create_ghost_cell(new_node_id)
+                self.cells.append(ghost_cell)
+                self.nodes[new_node_id] = new_node
+
         return self.nodes, self.faces, self.cells
