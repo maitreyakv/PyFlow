@@ -8,6 +8,19 @@ class Flow:
         # Initialize vector of conservative variables
         self.W_ = rho * np.array([1., u, v, w, E])
 
-    # Returns the Flow velocity
-    def v_(self):
-        return self.W_[1:4] / self.W_[0]
+    # Updated Flow variables
+    def update(self, thermo):
+        # Update density
+        self.rho = self.W_[0]
+
+        # Update velocity vector
+        self.v_ = self.W_[1:4] / self.rho
+
+        # Update energy
+        self.E = self.W_[4] / self.rho
+
+        # Compute pressure
+        self.p = thermo.p(self)
+
+        # Compute temperature
+        self.T = thermo.T(self)

@@ -48,7 +48,22 @@ class VTKWriter:
             print("writing flow data...")
             fp.write("CELL_DATA {}\n".format(num_cells))
 
-            fp.write("VECTORS velocity double\n")
+            fp.write("SCALARS pressure double 1\nLOOKUP_TABLE default\n")
             for cell in cells:
                 if not isinstance(cell, skip_cell_type):
-                    fp.write(" ".join(map(str, cell.flow.W_[1:4] / cell.flow.W_[0])) + '\n')
+                    fp.write("{}\n".format(cell.flow.p))
+
+            fp.write("\nSCALARS density double 1\nLOOKUP_TABLE default\n")
+            for cell in cells:
+                if not isinstance(cell, skip_cell_type):
+                    fp.write("{}\n".format(cell.flow.rho))
+
+            fp.write("\nSCALARS temperature double 1\nLOOKUP_TABLE default\n")
+            for cell in cells:
+                if not isinstance(cell, skip_cell_type):
+                    fp.write("{}\n".format(cell.flow.T))
+
+            fp.write("\nVECTORS velocity double\n")
+            for cell in cells:
+                if not isinstance(cell, skip_cell_type):
+                    fp.write(" ".join(map(str, cell.flow.v_)) + '\n')
