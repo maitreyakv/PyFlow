@@ -17,8 +17,7 @@ class VTKWriter:
     def write_to_file(self, nodes, cells, filename, write_ghost=False):
         print("writing simulation data to VTK file...")
 
-        skip_cell_type = NoneType if write_ghost else GhostCell
-
+        skip_cell_type = type(None) if write_ghost else GhostCell
 
         with open(filename, "w") as fp:
             fp.write("# vtk DataFile Version 2.0\ncomment goes here\nASCII\nDATASET UNSTRUCTURED_GRID\n\n")
