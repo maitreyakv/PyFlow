@@ -3,13 +3,17 @@ import itertools
 from solver.Node import Node
 from solver.Face import Face
 from solver.GhostCell import GhostCell
+from solver.NoSlipAdiabaticWallBC import NoSlipAdiabaticWallBC
 
 # TODO: Add doc for class
 class BoundaryFace(Face):
     # Constructor for the BoundaryFace
-    def __init__(self, *nodes):
+    def __init__(self, *nodes, bc=NoSlipAdiabaticWallBC()):
         # Call to superclass constructor
         super().__init__(*nodes)
+
+        # Save the BC
+        self.bc = bc
 
     # Sets the real Cell as the left Cell and reorients the normal vector
     def set_cell(self, cell):
@@ -44,7 +48,7 @@ class BoundaryFace(Face):
 
         # Assign the GhostCell to the right Cell
         self.right_cell = ghost_cell
-    
+
         # Return the Ghost Cell
         return ghost_cell, new_node
 
@@ -54,3 +58,7 @@ class BoundaryFace(Face):
         u_ = (pt.dot(self.n_) + d) * self.n_
         v_ = pt - u_
         return -u_ + v_
+
+    # Applies the BC of the BoundaryFace to the GhostCell
+    def apply_bc_to_ghost_cell(self):
+        self.bc.apply_bc(self.right_cell, self.left_cell)

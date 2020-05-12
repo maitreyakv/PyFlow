@@ -7,6 +7,9 @@ from solver.Node import Node
 from solver.Face import Face
 from solver.BoundaryFace import BoundaryFace
 from solver.TetrahedronCell import TetrahedronCell
+from solver.InletBC import InletBC
+from solver.OutletBC import OutletBC
+from solver.NoSlipAdiabaticWallBC import NoSlipAdiabaticWallBC
 
 # TODO: Add doc for class
 class GmshGridReader:
@@ -41,8 +44,25 @@ class GmshGridReader:
         # Initialize a list for the Cells
         self.cells = []
 
+        # Dictionary for the groups and their IDs
+        groups = {}
+
         # Attempt to open mesh file
         with open(filename, 'r') as fp:
+            # Read until the start of the groups
+            while not "$PhysicalNames" in line:
+                line = fp.readline()
+
+            # Read the number of groups in the mesh
+            num_groups = int(fp.readline().strip())
+
+            # Read each group from the file into the dictionary
+            print("reading groups...")
+            for i in range(num_groups):
+                line = fp.readline().strip().split(" ")
+                if line[0] == "2":
+                    groups[int(line[1])] = line[2]
+
             # Read lines until the start of the nodes
             while not "$Nodes" in line:
                 line = fp.readline()
@@ -71,7 +91,16 @@ class GmshGridReader:
                 # Parse Element from file
                 if line[1] == '2':
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
-                    self.faces.append(BoundaryFace(*face_nodes))
+                    group = groups[int(line[-4])]
+                    if "inlet" in group:
+                        bc = InletBC()
+                    elif "outlet" in group:
+                        bc = OutletBC()
+                    elif "wall" in group:
+                        bc = NoSlipAdiabaticWallBC()
+                    else:
+                        raise Exception("Unrecognized BC in Gmsh file")
+                    self.faces.append(BoundaryFace(*face_nodes, bc=bc))
                 elif line[1] == '4':
                     nodes_tetra = [self.nodes[n-1] for n in map(int, line[-4:])]
                     faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
