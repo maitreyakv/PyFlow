@@ -11,6 +11,15 @@ class BoundaryFace(Face):
         # Call to superclass constructor
         super().__init__(*nodes)
 
+    # Sets the real Cell as the left Cell and reorients the normal vector
+    def set_cell(self, cell):
+        # If the Cell is on the right side of the face, reorient the normal vector
+        if self.n_.dot(cell.r_ - self.r_) > 0.0:
+            self.n_ = -self.n_
+
+        # Set the Cell as the left Cell
+        self.left_cell = cell
+
     # Creates a GhostCell
     def create_ghost_cell(self, new_node_id):
         # Get the nodes of the real cell
@@ -33,12 +42,9 @@ class BoundaryFace(Face):
         # Create GhostCell
         ghost_cell = GhostCell(tuple(new_faces) + (self,), self.nodes + (new_node,))
 
-        # Assign the GhostCell to the left or right Cell
-        if self.left_cell:
-            self.right_cell = ghost_cell
-        else:
-            self.left_cell = ghost_cell
-
+        # Assign the GhostCell to the right Cell
+        self.right_cell = ghost_cell
+    
         # Return the Ghost Cell
         return ghost_cell, new_node
 
