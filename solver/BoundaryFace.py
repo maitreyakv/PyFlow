@@ -17,6 +17,10 @@ class BoundaryFace(Face):
 
     # Sets the real Cell as the left Cell and reorients the normal vector
     def set_cell(self, cell):
+        # Ignore the Cell if it is a GhostCell, since it was already assigned during creation
+        if isinstance(cell, GhostCell):
+            return
+
         # If the Cell is on the right side of the face, reorient the normal vector
         if self.n_.dot(cell.r_ - self.r_) > 0.0:
             self.n_ = -self.n_
@@ -27,7 +31,7 @@ class BoundaryFace(Face):
     # Creates a GhostCell
     def create_ghost_cell(self, new_node_id):
         # Get the nodes of the real cell
-        nodes_real_cell = self.left_cell.nodes if self.left_cell else self.right_cell.nodes
+        nodes_real_cell = self.left_cell.nodes
 
         # Find the Node in the real Cell not in the BoundaryFace
         node_to_flip = None
@@ -59,6 +63,6 @@ class BoundaryFace(Face):
         v_ = pt - u_
         return -u_ + v_
 
-    # Applies the BC of the BoundaryFace to the GhostCell
-    def apply_bc_to_ghost_cell(self):
-        self.bc.apply_bc(self.right_cell, self.left_cell)
+    # Applies the BC of the BoundaryFace to the GhostCell and self
+    def apply_bc(self, thermo):
+        self.bc.apply(self.right_cell, self.left_cell, self, thermo)

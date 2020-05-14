@@ -93,9 +93,11 @@ class GmshGridReader:
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
                     group = groups[int(line[-4])]
                     if "inlet" in group:
-                        bc = InletBC()
+                        # TEMP: Hardcoded inlet variables, needs proper IO
+                        bc = InletBC(101325., 101325. / (287.058 * 273.), 1.)
                     elif "outlet" in group:
-                        bc = OutletBC()
+                        # TEMP: Hardcoded outlet pressure, needs proper IO
+                        bc = OutletBC(101325. * 0.5)
                     elif "wall" in group:
                         bc = NoSlipAdiabaticWallBC()
                     else:
