@@ -24,3 +24,6 @@ class Flow:
 
         # Compute temperature
         self.T = thermo.T(self)
+
+        # Compute speed of sound
+        self.c = thermo.c(self)
