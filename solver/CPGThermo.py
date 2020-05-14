@@ -19,13 +19,21 @@ class CPGThermo(Thermo):
         # Save the specific gas constant
         self.R = R
 
-    # Pressure EoS
+    # Pressure EoS for pressure
     def p(self, flow):
         return (self.gamma - 1.) * flow.rho * (flow.E - 0.5 * np.linalg.norm(flow.v_)**2)
+
+    # Pressure EoS for energy
+    def E(self, flow):
+        return flow.p / ((self.gamma - 1.) * flow.rho) + 0.5 * np.linalg.norm(flow.v_)**2
 
     # Ideal gas law
     def T(self, flow):
         return flow.p / (flow.rho * self.R)
+
+    # Speed of sound
+    def c(self, flow):
+        return np.sqrt(self.gamma * self.R * flow.T)
 
     # Sutherland's Law
     def mu(self, flow):
