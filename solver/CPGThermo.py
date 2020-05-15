@@ -27,6 +27,10 @@ class CPGThermo(Thermo):
     def E(self, flow):
         return flow.p / ((self.gamma - 1.) * flow.rho) + 0.5 * np.linalg.norm(flow.v_)**2
 
+    # Total enthalpy
+    def H(self, flow):
+        return flow.E + flow.p / flow.rho
+
     # Ideal gas law
     def T(self, flow):
         return flow.p / (flow.rho * self.R)

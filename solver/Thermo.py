@@ -16,6 +16,10 @@ class Thermo(ABC):
         pass
 
     @abstractmethod
+    def H(self, flow):
+        pass
+
+    @abstractmethod
     def T(self, flow):
         pass
 

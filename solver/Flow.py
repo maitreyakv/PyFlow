@@ -22,6 +22,9 @@ class Flow:
         # Compute pressure
         self.p = thermo.p(self)
 
+        # Compute total enthalpy
+        self.H = thermo.H(self)
+
         # Compute temperature
         self.T = thermo.T(self)
 
