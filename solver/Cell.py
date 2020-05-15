@@ -13,7 +13,7 @@ class Cell(Element, ABC):
         self.faces = faces
 
         # Obtain set of vertices
-        self.nodes = nodes
+        self.nodes = tuple(sorted(list(nodes), key=lambda x: hash(x)))
 
         # Call superclass constructor
         super().__init__()
@@ -24,6 +24,14 @@ class Cell(Element, ABC):
         # Add the Cell to each Face
         for face in faces:
             face.set_cell(self)
+
+    # Finds the neighbors of the Cell after all Cells have been created
+    def find_neighbors(self):
+        self.neighbors = [face.other_cell(self) for face in self.faces]
+
+    # Implement hashing function
+    def __hash__(self):
+        return hash(self.nodes)
 
     @abstractmethod
     def compute_centroid(self):

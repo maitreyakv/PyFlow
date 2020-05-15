@@ -120,4 +120,8 @@ class GmshGridReader:
                 self.cells.append(ghost_cell)
                 self.nodes[new_node_id] = new_node
 
+        # Determine all neighbors for each cell
+        for cell in self.cells:
+            cell.find_neighbors()
+
         return self.nodes, self.faces, self.cells

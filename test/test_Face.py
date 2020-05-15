@@ -82,5 +82,11 @@ class TestFace(unittest.TestCase):
     def test_hash_3(self):
         self.assertFalse(hash(self.f3) == hash(self.f4))
 
+    def test_other_cell_1(self):
+        self.assertEqual(self.f6.other_cell(self.c1), self.c2)
+
+    def test_other_cell_2(self):
+        self.assertEqual(self.f6.other_cell(self.c2), self.c1)
+
 if __name__ == '__main__':
     unittest.main()

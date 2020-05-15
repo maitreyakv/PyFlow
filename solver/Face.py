@@ -25,7 +25,7 @@ class Face(Element):
         # Compute the surface area of the Face
         self.area = abs(0.5 * self.n_.dot(sum([fast_cross(nodes[i].r_, nodes[i+1].r_) for i in range(self.size-1)])))
 
-        # Initialize the left and righr cells to None
+        # Initialize the left and right cells to None
         self.left_cell = None
         self.right_cell = None
 
@@ -56,6 +56,10 @@ class Face(Element):
     def has_nodes(self, query_nodes):
         # Return whether all the nodes in the Face
         return all([node in self.nodes for node in query_nodes]) and self.size == len(query_nodes)
+
+    # Returns the other cell
+    def other_cell(self, cell):
+        return self.left_cell if cell == self.right_cell else self.right_cell
 
     # Implements equality function
     def __eq__(self, other):
