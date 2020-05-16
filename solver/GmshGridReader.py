@@ -7,7 +7,7 @@ from solver.Node import Node
 from solver.Face import Face
 from solver.BoundaryFace import BoundaryFace
 from solver.TetrahedronCell import TetrahedronCell
-from solver.InletBC import InletBC
+from solver.InjectionBC import InjectionBC
 from solver.OutletBC import OutletBC
 from solver.NoSlipAdiabaticWallBC import NoSlipAdiabaticWallBC
 
@@ -92,12 +92,12 @@ class GmshGridReader:
                 if line[1] == '2':
                     face_nodes = (self.nodes[n-1] for n in map(int, line[-3:]))
                     group = groups[int(line[-4])]
-                    if "inlet" in group:
+                    if "injection" in group:
                         # TEMP: Hardcoded inlet variables, needs proper IO
-                        bc = InletBC(101325., 101325. / (287.058 * 273.), 1.)
+                        bc = InjectionBC(lambda t: min(1., t/0.5), 273.)
                     elif "outlet" in group:
                         # TEMP: Hardcoded outlet pressure, needs proper IO
-                        bc = OutletBC(101325. * 0.5)
+                        bc = OutletBC(101325.) # * 0.5)
                     elif "wall" in group:
                         bc = NoSlipAdiabaticWallBC()
                     else:
@@ -113,12 +113,11 @@ class GmshGridReader:
         print("creating ghost cells...")
 
         # Create GhostCells
-        for face in tqdm(self.faces):
-            if isinstance(face, BoundaryFace):
-                new_node_id = len(self.nodes)
-                ghost_cell, new_node = face.create_ghost_cell(new_node_id)
-                self.cells.append(ghost_cell)
-                self.nodes[new_node_id] = new_node
+        for face in tqdm([face for face in self.faces if isinstance(face, BoundaryFace)]):
+            new_node_id = len(self.nodes)
+            ghost_cell, new_node = face.create_ghost_cell(new_node_id)
+            self.cells.append(ghost_cell)
+            self.nodes[new_node_id] = new_node
 
         # Determine all neighbors for each cell
         for cell in self.cells:
