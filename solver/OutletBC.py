@@ -12,7 +12,7 @@ class OutletBC(BC):
         self.p = p
 
     # Implements the usage of the BC to update a GhostCell
-    def apply(self, ghost_cell, interior_cell, boundary_face, thermo):
+    def apply(self, ghost_cell, interior_cell, boundary_face, thermo, t):
         # Define the reference state using the interior cell
         rho_ref = interior_cell.flow.rho
         c_ref = interior_cell.flow.c

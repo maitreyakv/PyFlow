@@ -64,5 +64,5 @@ class BoundaryFace(Face):
         return -u_ + v_
 
     # Applies the BC of the BoundaryFace to the GhostCell and self
-    def apply_bc(self, thermo):
-        self.bc.apply(self.right_cell, self.left_cell, self, thermo)
+    def apply_bc(self, thermo, t):
+        self.bc.apply(self.right_cell, self.left_cell, self, thermo, t)

@@ -8,5 +8,5 @@ class BC(ABC):
         pass
 
     @abstractmethod
-    def apply(self, ghost_cell, interior_cell, boundary_face, thermo):
+    def apply(self, ghost_cell, interior_cell, boundary_face, thermo, t):
         pass
