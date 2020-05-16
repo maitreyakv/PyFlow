@@ -25,6 +25,15 @@ class Cell(Element, ABC):
         for face in faces:
             face.set_cell(self)
 
+        # Initialize a map from a Face of the Cell to its convective flux
+        self.Fc_map = {face: None for face in faces}
+
+        # Initialize a map from a Face of the Cell to its viscous flux
+        self.Fv_map = {face: None for face in faces}
+
+        # Initialize a residual for the Cell
+        self.residual = np.nan * np.ones(5)
+
     # Finds the neighbors of the Cell after all Cells have been created
     def find_neighbors(self):
         self.neighbors = [face.other_cell(self) for face in self.faces]

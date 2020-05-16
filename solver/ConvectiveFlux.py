@@ -8,5 +8,5 @@ class ConvectiveFlux(ABC):
         pass
 
     @abstractmethod
-    def compute_convective_flux_at_face(self, face):
+    def compute_convective_flux(self, face):
         pass

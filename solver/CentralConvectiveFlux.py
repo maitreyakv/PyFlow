@@ -2,6 +2,7 @@ from tqdm import tqdm
 import numpy as np
 
 from solver.ConvectiveFlux import ConvectiveFlux
+from solver.BoundaryFace import BoundaryFace
 
 # TODO: Add doc for class
 class CentralConvectiveFlux(ConvectiveFlux):
@@ -42,6 +43,25 @@ class CentralConvectiveFlux(ConvectiveFlux):
                 self.thetas[cell] = np.clip(self.thetas[cell], 0., 2.)
 
     # Implements the computation of the convective flux at a Face
-    def compute_convective_flux_at_face(self, face):
-        # TODO: Implement function
+    def compute_convective_flux(self, face, thermo):
+        # Update conservative variables on interior Face using average of Cell values
+        if not isinstance(face, BoundaryFace):
+            # TODO: Maybe use interpolation instead of averaging
+            face.flow.W_ = 0.5 * (face.left_cell.flow.W_ + face.right_cell.flow.W_)
+            face.flow.update(thermo)
+
+        # Compute contravariant velocity at Face
+        V = face.flow.v_.dot(face.n_)
+
+        # Compute the convective flux at the Face
+        Fc = np.zeros(5)
+        Fc[0] = face.flow.rho * V
+        Fc[1:4] = face.flow.rho * face.flow.v_ * V + face.n_ * face.flow.p
+        Fc[4] = face.flow.rho * face.flow.H * V
+
+        # Add the convective flux to the map of convective fluxes in the left and right Cell
+        face.left_cell.Fc_map[face] = -Fc
+        face.right_cell.Fc_map[face] = Fc
+
+        # TODO: Implement artificial dissipation
         pass
