@@ -19,6 +19,9 @@ class CPGThermo(Thermo):
         # Save the specific gas constant
         self.R = R
 
+        # Compute the specific heat capacity at constant pressure
+        self.cp = gamma * R / (gamma - 1.)
+
     # Pressure EoS for pressure
     def p(self, flow):
         return (self.gamma - 1.) * flow.rho * (flow.E - 0.5 * np.linalg.norm(flow.v_)**2)
@@ -42,3 +45,7 @@ class CPGThermo(Thermo):
     # Sutherland's Law
     def mu(self, flow):
         return 1.45 * flow.T**1.5 * 1.e-6 / (flow.T + 110.)
+
+    # Compute thermal conductivity from Prandtl number
+    def k(self, flow):
+        return self.cp * flow.mu / self.Pr

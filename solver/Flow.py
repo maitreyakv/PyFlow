@@ -28,5 +28,11 @@ class Flow:
         # Compute temperature
         self.T = thermo.T(self)
 
+        # Compute dynamic viscosity
+        self.mu = thermo.mu(self)
+
+        # Compute thermal conductivity
+        self.k = thermo.k(self)
+
         # Compute speed of sound
         self.c = thermo.c(self)

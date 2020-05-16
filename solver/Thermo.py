@@ -30,3 +30,7 @@ class Thermo(ABC):
     @abstractmethod
     def mu(self, flow):
         pass
+
+    @abstractmethod
+    def k(self, flow):
+        pass
