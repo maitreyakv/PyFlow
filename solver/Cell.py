@@ -34,6 +34,11 @@ class Cell(Element, ABC):
         # Initialize a residual for the Cell
         self.residual = np.nan * np.ones(5)
 
+    # Adds the convective and viscous fluxes from all the Faces to the residual
+    def add_fluxes_to_residual(self):
+        for face in self.faces:
+            self.residual += (self.Fc_map[face] - self.Fv_map[face]) * face.area
+
     # Finds the neighbors of the Cell after all Cells have been created
     def find_neighbors(self):
         self.neighbors = [face.other_cell(self) for face in self.faces]
