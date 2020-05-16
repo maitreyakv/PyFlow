@@ -1,9 +1,9 @@
 from solver.BC import BC
 
 # TODO: Add doc for class
-class InletBC(BC):
+class InflowBC(BC):
 
-    # Constructor for InletBC
+    # Constructor for InflowBC
     def __init__(self, p, rho, v_):
         # Call to superclass constructor
         super().__init__()
