@@ -16,8 +16,4 @@ class TetrahedronCell(Cell):
 
     def compute_volume(self):
         # Compute the volume
-        a = self.nodes[0].r_
-        b = self.nodes[1].r_
-        c = self.nodes[2].r_
-        d = self.nodes[3].r_
-        return abs(np.dot(a - d, fast_cross(b - d, c - d))) / 6.0
+        return sum([face.r_.dot(face.normal(self.r_) * face.area) for face in self.faces]) / 3.

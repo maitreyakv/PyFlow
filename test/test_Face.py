@@ -42,6 +42,7 @@ class TestFace(unittest.TestCase):
     c2 = TetrahedronCell(faces_2, nodes_2)
 
     f10 = Face(n2, n12, n3)
+    f11 = Face(n1, n2, n4)
 
     def test_n_(self):
         self.assertTrue(np.allclose(self.f1.n_, 1.0 / np.sqrt(3.0) * np.array([1., 1., 1.])))
@@ -53,7 +54,7 @@ class TestFace(unittest.TestCase):
         self.assertTrue(np.allclose(self.f1.normal(np.array([4., 4., 4.])), -1.0 / np.sqrt(3.0) * np.array([1., 1., 1.])))
 
     def test_area(self):
-        self.assertEqual(self.f2.area, 6.)
+        self.assertEqual(self.f11.area, 2.)
 
     def test_r_(self):
         self.assertTrue(np.allclose(self.f2.r_, np.array([1., 1.5, 0.])))

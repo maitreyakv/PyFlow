@@ -23,7 +23,8 @@ class Face(Element):
         self.n_ /= np.linalg.norm(self.n_)
 
         # Compute the surface area of the Face
-        self.area = abs(0.5 * self.n_.dot(sum([fast_cross(nodes[i].r_, nodes[i+1].r_) for i in range(self.size-1)])))
+        self.area = 0.5 * np.linalg.norm(fast_cross(nodes[2].r_ - nodes[0].r_, nodes[2].r_ - nodes[1].r_))
+        #self.area = abs(0.5 * self.n_.dot(sum([fast_cross(nodes[i].r_, nodes[i+1].r_) for i in range(self.size-1)])))
 
         # Initialize the left and right cells to None
         self.left_cell = None
