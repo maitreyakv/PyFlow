@@ -34,9 +34,13 @@ class CPGThermo(Thermo):
     def H(self, flow):
         return flow.E + flow.p / flow.rho
 
-    # Ideal gas law
+    # Ideal gas law for temperature
     def T(self, flow):
         return flow.p / (flow.rho * self.R)
+
+    # Ideal gas law for density
+    def rho(self, flow):
+        return flow.p / (self.R * flow.T)
 
     # Speed of sound
     def c(self, flow):
