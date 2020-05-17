@@ -33,10 +33,10 @@ class GradientAvgViscousFlux(ViscousFlux):
             t_ = (face.right_cell.r_ - face.left_cell.r_) / l
 
             # Compute directional derivative along line connecting left and right Cell centroids
-            dudl = face.right_cell.flow.v_[0] - face.left_cell.flow.v_[0] * l
-            dvdl = face.right_cell.flow.v_[1] - face.left_cell.flow.v_[1] * l
-            dwdl = face.right_cell.flow.v_[2] - face.left_cell.flow.v_[2] * l
-            dTdl = face.right_cell.flow.T - face.left_cell.flow.T * l
+            dudl = (face.right_cell.flow.v_[0] - face.left_cell.flow.v_[0]) / l
+            dvdl = (face.right_cell.flow.v_[1] - face.left_cell.flow.v_[1]) / l
+            dwdl = (face.right_cell.flow.v_[2] - face.left_cell.flow.v_[2]) / l
+            dTdl = (face.right_cell.flow.T - face.left_cell.flow.T) / l
 
             # Compute modified average of gradients
             face.flow.grad_u_ = grad_u_avg_ - (grad_u_avg_.dot(t_) - dudl) * t_
