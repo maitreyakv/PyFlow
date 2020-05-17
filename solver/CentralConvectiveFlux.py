@@ -13,7 +13,7 @@ class CentralConvectiveFlux(ConvectiveFlux):
         super().__init__()
 
         # Create a dictionary mapping Cells to their geometric weights
-        self.thetas = {}
+        self.thetas_map = {}
 
         print("initializing central scheme w/ artificial dissipation for convective fluxes...")
 
@@ -38,9 +38,18 @@ class CentralConvectiveFlux(ConvectiveFlux):
             lm = (a @ R) / d
 
             # Compute geometrical weights
-            self.thetas[cell] = [1. + lm.dot(neighbor.r_ - cell.r_) for neighbor in cell.neighbors]
+            self.thetas_map[cell] = [1. + lm.dot(neighbor.r_ - cell.r_) for neighbor in cell.neighbors]
             if clip:
-                self.thetas[cell] = np.clip(self.thetas[cell], 0., 2.)
+                self.thetas_map[cell] = np.clip(self.thetas_map[cell], 0., 2.)
+
+        # Initialize a map for the spectral radius of each Cell
+        self.spectral_radius_map = {}
+
+        # Initialize a map for the pressure sensor of each Cell
+        self.pres_sens_map = {}
+
+        # Initialize a map for the conservative variable Laplacians
+        self.lap_map = {}
 
     # Implements the computation of the convective flux at a Face
     def compute_convective_flux(self, face, thermo):
@@ -63,5 +72,41 @@ class CentralConvectiveFlux(ConvectiveFlux):
         face.left_cell.Fc_map[face] = -Fc
         face.right_cell.Fc_map[face] = Fc
 
-        # TODO: Implement artificial dissipation
-        pass
+    # Updates the spectral radius and pressure sensor maps and conservative variable Laplacians for a Cell
+    def prepare_for_artificial_dissipation(self, cell):
+        # Compute spectral radius
+        self.spectral_radius_map[cell] = sum([(face.flow.v_.dot(face.normal(cell.r_)) + face.flow.c)*face.area for face in cell.faces])
+
+        # Compute pressure sensor
+        self.pres_sens_map[cell] = abs(sum([theta * (neighbor.flow.p - cell.flow.p) for theta, neighbor in zip(self.thetas_map[cell], cell.neighbors)])) / sum([neighbor.flow.p + cell.flow.p for neighbor in cell.neighbors])
+
+        # Compute conservative variable Laplacians
+        self.lap_map[cell] = sum([theta * (neighbor.flow.W_ - cell.flow.W_) for theta, neighbor in zip(self.thetas_map[cell], cell.neighbors)])
+
+    # Computes and add artificial dissipation to a Cell's residual
+    def add_artificial_dissipation(self, cell):
+        # pressure sensor parameters
+        # TODO: Maybe not hardcode these, make them options
+        k2 = 0.5
+        k4 = 1. / 128.
+
+        # Initialize dissipation
+        D_ = np.zeros(5)
+
+        # Iterate over Faces and neighbors of Cell
+        for face, neighbor, theta in zip(cell.faces, cell.neighbors, self.thetas_map[cell]):
+            if not isinstance(face, BoundaryFace):
+                # Compute spectral radius at Face
+                # TODO: Maybe use interpolation instead of averaging
+                spectral_radius = 0.5 * (self.spectral_radius_map[face.left_cell] + self.spectral_radius_map[face.right_cell])
+
+                # Compute pressure sensor coefficients
+                eps2 = k2 * max(self.pres_sens_map[cell], self.pres_sens_map[neighbor])
+                eps4 = max(0., k4 - eps2)
+
+                # Add contribution to artificial dissipation
+                D_ += spectral_radius * eps2 * theta * (neighbor.flow.W_ - cell.flow.W_) - (spectral_radius * eps4 * (self.lap_map[neighbor] - self.lap_map[cell]))
+
+        # Add the artificial dissipation to the Cell's residual
+        cell.D_ = D_ # TEMP: Saving dissipation for debugging
+        cell.residual -= D_
