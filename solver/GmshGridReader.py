@@ -4,7 +4,7 @@ from tqdm import tqdm
 from solver.Node import Node
 from solver.Face import Face
 from solver.BoundaryFace import BoundaryFace
-from solver.TetrahedronCell import TetrahedronCell
+from solver.Cell import Cell
 from solver.InjectionBC import InjectionBC
 from solver.OutletBC import OutletBC
 from solver.SlipAdiabaticWallBC import SlipAdiabaticWallBC
@@ -105,7 +105,7 @@ class GmshGridReader:
                 elif line[1] == '4':
                     nodes_tetra = [self.nodes[n-1] for n in map(int, line[-4:])]
                     faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in combinations(nodes_tetra, 3)]
-                    self.cells.append(TetrahedronCell(faces_tetra, nodes_tetra))
+                    self.cells.append(Cell(faces_tetra, nodes_tetra))
 
         print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))
 

@@ -1,11 +1,10 @@
 from solver.Cell import Cell
 from solver.GhostCell import GhostCell
-from solver.TetrahedronCell import TetrahedronCell
 
 # TODO: Add doc for class
 class VTKWriter:
 
-    cell_types = {TetrahedronCell: 10,
+    cell_types = {Cell: 10,
                   GhostCell: 10}
 
     # Constructor for VTKWriter

@@ -2,6 +2,7 @@ import itertools
 from numpy import nan, ones
 from abc import ABC, abstractmethod
 
+from solver.util import fast_cross
 from solver.Element import Element
 
 # TODO: Add doc for class
@@ -49,10 +50,9 @@ class Cell(Element, ABC):
     def __hash__(self):
         return hash(self.nodes)
 
-    @abstractmethod
     def compute_centroid(self):
-        pass
+        return sum([node.r_ for node in self.nodes]) / 4.0;
 
-    @abstractmethod
     def compute_volume(self):
-        pass
+        # Compute the volume
+        return sum([face.r_.dot(face.normal(self.r_) * face.area) for face in self.faces]) / 3.

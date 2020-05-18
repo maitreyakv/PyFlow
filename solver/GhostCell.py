@@ -1,7 +1,7 @@
-from solver.TetrahedronCell import TetrahedronCell
+from solver.Cell import Cell
 
 # TODO: Add doc for class
-class GhostCell(TetrahedronCell):
+class GhostCell(Cell):
 
     # Constructor for GhostCell
     def __init__(self, faces, nodes):
