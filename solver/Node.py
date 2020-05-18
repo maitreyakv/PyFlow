@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import array, float64
 
 # TODO: Add doc for class
 class Node:
@@ -13,7 +13,7 @@ class Node:
         self.id = id
 
         # Save the position vector of the Node
-        self.r_ = np.array([x, y, z], dtype=np.float64)
+        self.r_ = array([x, y, z], dtype=float64)
 
         # Initialize an empty set of Faces to which the Node belongs to
         self.faces = set()

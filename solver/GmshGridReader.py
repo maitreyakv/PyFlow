@@ -1,7 +1,5 @@
-import itertools
-import numpy as np
+from itertools import combinations
 from tqdm import tqdm
-import warnings
 
 from solver.Node import Node
 from solver.Face import Face
@@ -9,6 +7,7 @@ from solver.BoundaryFace import BoundaryFace
 from solver.TetrahedronCell import TetrahedronCell
 from solver.InjectionBC import InjectionBC
 from solver.OutletBC import OutletBC
+from solver.SlipAdiabaticWallBC import SlipAdiabaticWallBC
 from solver.NoSlipAdiabaticWallBC import NoSlipAdiabaticWallBC
 
 # TODO: Add doc for class
@@ -94,18 +93,18 @@ class GmshGridReader:
                     group = groups[int(line[-4])]
                     if "injection" in group:
                         # TEMP: Hardcoded inlet variables, needs proper IO
-                        bc = InjectionBC(lambda t: min(1., t/0.5), 273.)
+                        bc = InjectionBC(lambda t: 1. * 101325. / (287.058 * 273.), 273.)
                     elif "outlet" in group:
                         # TEMP: Hardcoded outlet pressure, needs proper IO
                         bc = OutletBC(101325.) # * 0.5)
                     elif "wall" in group:
-                        bc = NoSlipAdiabaticWallBC()
+                        bc = SlipAdiabaticWallBC()
                     else:
                         raise Exception("Unrecognized BC in Gmsh file")
                     self.faces.append(BoundaryFace(*face_nodes, bc=bc))
                 elif line[1] == '4':
                     nodes_tetra = [self.nodes[n-1] for n in map(int, line[-4:])]
-                    faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in itertools.combinations(nodes_tetra, 3)]
+                    faces_tetra = [self.find_or_create_face(nodes_face) for nodes_face in combinations(nodes_tetra, 3)]
                     self.cells.append(TetrahedronCell(faces_tetra, nodes_tetra))
 
         print("done reading {} nodes, {} faces, {} cells from file".format(len(self.nodes), len(self.faces), len(self.cells)))

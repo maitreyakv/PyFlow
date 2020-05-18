@@ -1,5 +1,5 @@
 import itertools
-import numpy as np
+from numpy import nan, ones
 from abc import ABC, abstractmethod
 
 from solver.Element import Element
@@ -32,7 +32,7 @@ class Cell(Element, ABC):
         self.Fv_map = {face: None for face in faces}
 
         # Initialize a residual for the Cell
-        self.residual = np.nan * np.ones(5)
+        self.residual = nan * ones(5)
 
     # Adds the convective and viscous fluxes from all the Faces to the residual
     def add_fluxes_to_residual(self):

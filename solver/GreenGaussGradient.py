@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import zeros
 
 from solver.Gradient import Gradient
 
@@ -13,10 +13,10 @@ class GreenGaussGradient(Gradient):
     # Implements computation of the velocity and temperature gradients
     def compute_gradients(self, cell):
         # Initialize Cell gradients to zero
-        cell.flow.grad_u_ = np.zeros(3)
-        cell.flow.grad_v_ = np.zeros(3)
-        cell.flow.grad_w_ = np.zeros(3)
-        cell.flow.grad_T_ = np.zeros(3)
+        cell.flow.grad_u_ = zeros(3)
+        cell.flow.grad_v_ = zeros(3)
+        cell.flow.grad_w_ = zeros(3)
+        cell.flow.grad_T_ = zeros(3)
 
         # Compute gradients by looping over the Faces of the Cell
         for face in cell.faces:

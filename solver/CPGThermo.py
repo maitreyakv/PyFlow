@@ -1,4 +1,5 @@
-import numpy as np
+from numpy import sqrt
+from numpy.linalg import norm
 
 from solver.Thermo import Thermo
 
@@ -24,11 +25,11 @@ class CPGThermo(Thermo):
 
     # Pressure EoS for pressure
     def p(self, flow):
-        return (self.gamma - 1.) * flow.rho * (flow.E - 0.5 * np.linalg.norm(flow.v_)**2)
+        return (self.gamma - 1.) * flow.rho * (flow.E - 0.5 * norm(flow.v_)**2)
 
     # Pressure EoS for energy
     def E(self, flow):
-        return flow.p / ((self.gamma - 1.) * flow.rho) + 0.5 * np.linalg.norm(flow.v_)**2
+        return flow.p / ((self.gamma - 1.) * flow.rho) + 0.5 * norm(flow.v_)**2
 
     # Total enthalpy
     def H(self, flow):
@@ -44,7 +45,7 @@ class CPGThermo(Thermo):
 
     # Speed of sound
     def c(self, flow):
-        return np.sqrt(self.gamma * self.R * flow.T)
+        return sqrt(self.gamma * self.R * flow.T)
 
     # Sutherland's Law
     def mu(self, flow):

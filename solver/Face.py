@@ -1,5 +1,4 @@
-import itertools
-import numpy as np
+from numpy.linalg import norm
 
 from solver.util import fast_cross
 from solver.Element import Element
@@ -20,10 +19,10 @@ class Face(Element):
 
         # Compute the normal vector
         self.n_ = fast_cross(nodes[1].r_ - nodes[0].r_, nodes[2].r_ - nodes[0].r_)
-        self.n_ /= np.linalg.norm(self.n_)
+        self.n_ /= norm(self.n_)
 
         # Compute the surface area of the Face
-        self.area = 0.5 * np.linalg.norm(fast_cross(nodes[2].r_ - nodes[0].r_, nodes[2].r_ - nodes[1].r_))
+        self.area = 0.5 * norm(fast_cross(nodes[2].r_ - nodes[0].r_, nodes[2].r_ - nodes[1].r_))
         #self.area = abs(0.5 * self.n_.dot(sum([fast_cross(nodes[i].r_, nodes[i+1].r_) for i in range(self.size-1)])))
 
         # Initialize the left and right cells to None

@@ -1,5 +1,3 @@
-import numpy as np
-
 from solver.util import fast_cross
 from solver.Cell import Cell
 

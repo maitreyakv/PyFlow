@@ -1,5 +1,6 @@
 from tqdm import tqdm
-import numpy as np
+from numpy import zeros, delete, clip, outer
+from numpy.linalg import det
 
 from solver.ConvectiveFlux import ConvectiveFlux
 from solver.BoundaryFace import BoundaryFace
@@ -8,7 +9,7 @@ from solver.BoundaryFace import BoundaryFace
 class CentralConvectiveFlux(ConvectiveFlux):
 
     # Constructor for CentralConvectiveFlux
-    def __init__(self, interior_cells, clip=True):
+    def __init__(self, interior_cells, use_clip=True):
         # Call to superclass constructor
         super().__init__()
 
@@ -23,24 +24,24 @@ class CentralConvectiveFlux(ConvectiveFlux):
             R = sum([neighbor.r_ - cell.r_ for neighbor in cell.neighbors])
 
             # Compute second order moments
-            I = sum([np.outer(neighbor.r_ - cell.r_, neighbor.r_ - cell.r_) for neighbor in cell.neighbors])
+            I = sum([outer(neighbor.r_ - cell.r_, neighbor.r_ - cell.r_) for neighbor in cell.neighbors])
 
             # Compute matrix of coefficients
-            a = np.zeros((3,3))
+            a = zeros((3,3))
             for i in range(3):
                 for j in range(3):
-                    a[i,j] = (-1. ** (i + j)) * np.linalg.det(np.delete(np.delete(I, i, 0), j, 1))
+                    a[i,j] = (-1. ** (i + j)) * det(delete(delete(I, i, 0), j, 1))
 
             # Compute determinant of I
-            d = np.linalg.det(I)
+            d = det(I)
 
             # Compute Lagrange multipliers
             lm = (a @ R) / d
 
             # Compute geometrical weights
             self.thetas_map[cell] = [1. + lm.dot(neighbor.r_ - cell.r_) for neighbor in cell.neighbors]
-            if clip:
-                self.thetas_map[cell] = np.clip(self.thetas_map[cell], 0., 2.)
+            if use_clip:
+                self.thetas_map[cell] = clip(self.thetas_map[cell], 0., 2.)
 
         # Initialize a map for the spectral radius of each Cell
         self.spectral_radius_map = {}
@@ -63,7 +64,7 @@ class CentralConvectiveFlux(ConvectiveFlux):
         V = face.flow.v_.dot(face.n_)
 
         # Compute the convective flux at the Face
-        Fc = np.zeros(5)
+        Fc = zeros(5)
         Fc[0] = face.flow.rho * V
         Fc[1:4] = face.flow.rho * face.flow.v_ * V + face.n_ * face.flow.p
         Fc[4] = face.flow.rho * face.flow.H * V
@@ -91,7 +92,7 @@ class CentralConvectiveFlux(ConvectiveFlux):
         k4 = 1. / 128.
 
         # Initialize dissipation
-        D_ = np.zeros(5)
+        D_ = zeros(5)
 
         # Iterate over Faces and neighbors of Cell
         for face, neighbor, theta in zip(cell.faces, cell.neighbors, self.thetas_map[cell]):
@@ -108,5 +109,5 @@ class CentralConvectiveFlux(ConvectiveFlux):
                 D_ += spectral_radius * eps2 * theta * (neighbor.flow.W_ - cell.flow.W_) - (spectral_radius * eps4 * (self.lap_map[neighbor] - self.lap_map[cell]))
 
         # Add the artificial dissipation to the Cell's residual
-        cell.D_ = D_ # TEMP: Saving dissipation for debugging
+        cell.D_ = D_ # TEMP: Save dissipation for debugging
         cell.residual -= D_

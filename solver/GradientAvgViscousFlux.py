@@ -1,4 +1,5 @@
-import numpy as np
+from numpy import zeros
+from numpy.linalg import norm
 
 from solver.ViscousFlux import ViscousFlux
 from solver.BoundaryFace import BoundaryFace
@@ -27,7 +28,7 @@ class GradientAvgViscousFlux(ViscousFlux):
             grad_T_avg_ = 0.5 * (face.left_cell.flow.grad_T_ + face.right_cell.flow.grad_T_)
 
             # Compute distance between centroids of left and right Cells
-            l = np.linalg.norm(face.right_cell.r_ - face.left_cell.r_)
+            l = norm(face.right_cell.r_ - face.left_cell.r_)
 
             # Compute unit vector along this line
             t_ = (face.right_cell.r_ - face.left_cell.r_) / l
@@ -48,7 +49,7 @@ class GradientAvgViscousFlux(ViscousFlux):
         div_ = face.flow.grad_u_[0] + face.flow.grad_v_[1] + face.flow.grad_w_[2]
 
         # Assemble stress tensor
-        tau = np.zeros((3,3))
+        tau = zeros((3,3))
         tau[0,0] = 2. * face.flow.mu * (face.flow.grad_u_[0] - div_ / 3.)
         tau[1,1] = 2. * face.flow.mu * (face.flow.grad_v_[1] - div_ / 3.)
         tau[2,2] = 2. * face.flow.mu * (face.flow.grad_w_[2] - div_ / 3.)
@@ -60,7 +61,7 @@ class GradientAvgViscousFlux(ViscousFlux):
         Theta_ = (tau @ face.flow.v_) + face.flow.k * face.flow.grad_T_
 
         # Compute viscous flux
-        Fv = np.zeros(5)
+        Fv = zeros(5)
         Fv[1:4] = tau @ face.n_
         Fv[4] = Theta_.dot(face.n_)
 

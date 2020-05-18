@@ -1,4 +1,4 @@
-import itertools
+from itertools import combinations
 
 from solver.Node import Node
 from solver.Face import Face
@@ -45,7 +45,7 @@ class BoundaryFace(Face):
         new_node = Node(*new_node_vector, new_node_id)
 
         # Create Faces for GhostCell
-        new_faces = [Face(*(node_pair_in_face + (new_node,))) for node_pair_in_face in itertools.combinations(self.nodes, 2)]
+        new_faces = [Face(*(node_pair_in_face + (new_node,))) for node_pair_in_face in combinations(self.nodes, 2)]
 
         # Create GhostCell
         ghost_cell = GhostCell(tuple(new_faces) + (self,), self.nodes + (new_node,))
