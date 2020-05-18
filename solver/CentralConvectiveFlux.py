@@ -5,6 +5,11 @@ from numpy.linalg import det
 from solver.ConvectiveFlux import ConvectiveFlux
 from solver.BoundaryFace import BoundaryFace
 
+# pressure sensor parameters
+# TODO: Maybe not hardcode these, make them options
+k2 = 0.5
+k4 = 1. / 128.
+
 # TODO: Add doc for class
 class CentralConvectiveFlux(ConvectiveFlux):
 
@@ -79,18 +84,15 @@ class CentralConvectiveFlux(ConvectiveFlux):
         self.spectral_radius_map[cell] = sum([(face.flow.v_.dot(face.normal(cell.r_)) + face.flow.c)*face.area for face in cell.faces])
 
         # Compute pressure sensor
-        self.pres_sens_map[cell] = abs(sum([theta * (neighbor.flow.p - cell.flow.p) for theta, neighbor in zip(self.thetas_map[cell], cell.neighbors)])) / sum([neighbor.flow.p + cell.flow.p for neighbor in cell.neighbors])
+        numer = abs(sum([theta * (neighbor.flow.p - cell.flow.p) for theta, neighbor in zip(self.thetas_map[cell], cell.neighbors)]))
+        denom = sum([neighbor.flow.p + cell.flow.p for neighbor in cell.neighbors])
+        self.pres_sens_map[cell] = numer / denom
 
         # Compute conservative variable Laplacians
         self.lap_map[cell] = sum([theta * (neighbor.flow.W_ - cell.flow.W_) for theta, neighbor in zip(self.thetas_map[cell], cell.neighbors)])
 
     # Computes and add artificial dissipation to a Cell's residual
     def add_artificial_dissipation(self, cell):
-        # pressure sensor parameters
-        # TODO: Maybe not hardcode these, make them options
-        k2 = 0.5
-        k4 = 1. / 128.
-
         # Initialize dissipation
         D_ = zeros(5)
 
@@ -110,4 +112,4 @@ class CentralConvectiveFlux(ConvectiveFlux):
 
         # Add the artificial dissipation to the Cell's residual
         cell.D_ = D_ # TEMP: Save dissipation for debugging
-        cell.residual -= D_
+        cell.Rd += D_
