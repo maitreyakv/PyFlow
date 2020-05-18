@@ -36,3 +36,9 @@ class Flow:
 
         # Compute speed of sound
         self.c = thermo.c(self)
+
+        # Compute specific heat capacity
+        self.cp = thermo.cp(self)
+
+        # Compute heat capacity ratio
+        self.gamma = thermo.gamma(self)

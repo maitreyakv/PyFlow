@@ -38,3 +38,11 @@ class Thermo(ABC):
     @abstractmethod
     def k(self, flow):
         pass
+
+    @abstractmethod
+    def cp(self, flow):
+        pass
+
+    @abstractmethod
+    def gamma(self, flow):
+        pass
