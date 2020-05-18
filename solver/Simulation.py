@@ -30,6 +30,10 @@ class Simulation:
         from solver.GradientAvgViscousFlux import GradientAvgViscousFlux
         self.viscous_flux = GradientAvgViscousFlux()
 
+        # Initialize Integrator
+        from solver.HybridMultistageIntegrator import HybridMultistageIntegrator
+        self.integrator = HybridMultistageIntegrator(self.interior_cells)
+
     # TODO: Add doc for function
     def compute_residuals(self, t):
         # Update all variables in interior cells and set residuals to zero
@@ -69,19 +73,13 @@ class Simulation:
         for face in self.faces:
             self.viscous_flux.compute_viscous_flux(face, self.thermo)
 
-        # Add the fluxes to the residuals and compute L2 norm of residuals
-        residual_L2_norm = zeros(5)
+        # Add the fluxes to the residual comppnents
         for cell in self.interior_cells:
             cell.add_fluxes_to_residual()
-            residual_L2_norm += (cell.Rc - cell.Rd)**2
-        residual_L2_norm = sqrt(residual_L2_norm)
-        print("residual L2 norm = {}".format(residual_L2_norm))
 
     # TODO: Add doc for function
-    def integrate_step(self, dt):
-        # TEMP: Perform Euler integration
-        for cell in self.interior_cells:
-            cell.flow.W_ += -dt * (cell.Rc - cell.Rd) / cell.vol
+    def step(self, t, dt=None):
+        return self.integrator.integrate(self, t, dt=dt)
 
     # TODO: Add doc for function
     def prepare_for_save(self):

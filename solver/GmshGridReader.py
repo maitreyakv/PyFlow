@@ -98,7 +98,7 @@ class GmshGridReader:
                         # TEMP: Hardcoded outlet pressure, needs proper IO
                         bc = OutletBC(101325.) # * 0.5)
                     elif "wall" in group:
-                        bc = SlipAdiabaticWallBC()
+                        bc = NoSlipAdiabaticWallBC()
                     else:
                         raise Exception("Unrecognized BC in Gmsh file")
                     self.faces.append(BoundaryFace(*face_nodes, bc=bc))
