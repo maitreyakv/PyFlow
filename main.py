@@ -1,8 +1,7 @@
-import numpy as np
+from numpy import array
 from tqdm import tqdm
 
-from solver.GhostCell import GhostCell
-from solver.BoundaryFace import BoundaryFace
+from solver.Simulation import Simulation
 
 def main():
     # Read mesh
@@ -11,112 +10,47 @@ def main():
     mesh_file = "/Users/maitreya/Desktop/pipe-3d-mesh/pipe.msh"
     nodes, faces, cells = mesh_reader.read_grid_from_file(mesh_file)
 
-    interior_cells = [cell for cell in cells if not isinstance(cell, GhostCell)]
-    ghost_cells = [cell for cell in cells if isinstance(cell, GhostCell)]
-
-    boundary_faces = [face for face in faces if isinstance(face, BoundaryFace)]
-
     # Initial conditions
     print("initializing flow field...")
     for cell in cells:
         # TEMP: Pipe Flow parabolic profile
-        u_max = 0. # 1.
+        u_max =  1.
         R_pipe = 1.
-        r = np.sqrt(cell.r_[1]**2 + cell.r_[2]**2)
-        u = -u_max * (0.5 * (r / R_pipe)**2 + 0.5 * (r / R_pipe) - 1.)
+        u = u_max # -u_max * (0.5 * (r / R_pipe)**2 + 0.5 * (r / R_pipe) - 1.)
         T = 273.
         p = 101325. # * (1. - 0.5 * (cell.r_[0] / 5.))
         rho = p / (287.058 * T)
         E = p / (0.4 * rho) + 0.5 * u**2
-        cell.flow.W_ = rho * np.array([1., u, 0., 0., E])
+        cell.flow.W_ = rho * array([1., u, 0., 0., E])
 
-    # Initialize Thermo
-    from solver.CPGThermo import CPGThermo
-    thermo = CPGThermo(1.4, 0.72, 287.058)
-
-    # Initialize Convective Flux Scheme
-    from solver.CentralConvectiveFlux import CentralConvectiveFlux
-    convective_flux = CentralConvectiveFlux(interior_cells)
-
-    # Initialise Gradient computer
-    from solver.GreenGaussGradient import GreenGaussGradient
-    gradient = GreenGaussGradient()
-
-    # Initialize Viscous Flux Scheme
-    from solver.GradientAvgViscousFlux import GradientAvgViscousFlux
-    viscous_flux = GradientAvgViscousFlux()
+    # Construct Simulation
+    sim = Simulation(faces, cells)
 
     # TEMP: Time stepping
     t = 0.
-    dt = 0.1 * 0.25 / 1.
-    for iter in range(2):
+    dt = 0.01 * 0.3 / 1.
+    for iter in range(1):
         print("iteration {}...".format(iter))
 
-        # Update all variables in interior cells and set residuals to zero
-        for interior_cell in interior_cells:
-            interior_cell.flow.update(thermo)
-            interior_cell.residual = np.zeros(5)
+        sim.compute_residuals(t)
 
-        # Apply BCs to GhostCells and BoundaryFaces and update all variables on BoundaryFaces
-        for boundary_face in boundary_faces:
-            boundary_face.apply_bc(thermo, t)
-            boundary_face.flow.update(thermo)
+        sim.integrate_step(dt)
 
-        # Update all variables in GhostCells
-        for ghost_cell in ghost_cells:
-            ghost_cell.flow.update(thermo)
-
-        # Compute the convective fluxes
-        #print("computing convective fluxes...")
-        for face in faces:
-            convective_flux.compute_convective_flux(face, thermo)
-
-        # Update Cell's spectral radius of convective flux jacobian
-        for cell in interior_cells:
-            convective_flux.prepare_for_artificial_dissipation(cell)
-
-        # Add the artificial dissipation
-        for cell in interior_cells:
-            convective_flux.add_artificial_dissipation(cell)
-
-        # Compute velocity and temperature gradients
-        for cell in interior_cells:
-            gradient.compute_gradients(cell)
-
-        # Compute the viscous fluxes
-        #print("computing viscous fluxes...")
-        for face in faces:
-            viscous_flux.compute_viscous_flux(face, thermo)
-
-        # Add the fluxes to the residuals and compute L2 norm of residuals
-        residual_L2_norm = np.zeros(5)
-        for cell in interior_cells:
-            cell.add_fluxes_to_residual()
-            residual_L2_norm += cell.residual**2
-        residual_L2_norm = np.sqrt(residual_L2_norm)
-        print("residual L2 norm = {}".format(residual_L2_norm))
-
-        # TEMP: Perform Euler integration
-        for cell in interior_cells:
-            cell.flow.W_ += -dt * cell.residual / cell.vol
         t += dt
 
-    # Update all variables in all cells before writing to file
-    for cell in cells:
-        cell.flow.update(thermo)
+    sim.prepare_for_save()
 
     # TEMP: Debugging
-    from solver.NoSlipAdiabaticWallBC import NoSlipAdiabaticWallBC
+    #from solver.SlipAdiabaticWallBC import SlipAdiabaticWallBC
     #from solver.InjectionBC import InjectionBC
     #from solver.OutletBC import OutletBC
-    import seaborn as sns
-    def cond(cell):
-        return True
-    #    #return any([isinstance(face, BoundaryFace) and isinstance(face.bc, NoSlipAdiabaticWallBC) for face in cell.faces])
-    query_cells = [sum(cell.Fc_map.values())[1] for cell in interior_cells if cond(cell)]
-    sns.distplot(np.array(query_cells), rug=True)
-    import matplotlib.pyplot as plt
-    plt.show()
+    #import seaborn as sns
+    #def cond(cell):
+    #    return any([isinstance(face, BoundaryFace) and isinstance(face.bc, (OutletBC, InjectionBC)) for face in cell.faces]) and any([isinstance(face, BoundaryFace) and isinstance(face.bc, SlipAdiabaticWallBC) for face in cell.faces])
+    #query = [dt*sum([cell.Fc_map[face] * face.area for face in cell.faces])[0]/cell.vol for cell in interior_cells if cond(cell)]
+    #sns.distplot(np.array(query), rug=True, kde=False)
+    #import matplotlib.pyplot as plt
+    #plt.show()
 
     # Write data file
     from solver.VTKWriter import VTKWriter
