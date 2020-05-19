@@ -12,7 +12,7 @@ def main():
 
     num_cons_var = 5
     W_cells = zeros((cells.size, num_cons_var), dtype=float64)
-    W_faces = zeros((cells.size, num_cons_var), dtype=float64)
+    W_faces = zeros((faces.size, num_cons_var), dtype=float64)
 
     # TEMP: Pipe flow initial conditions
     u = 1.
@@ -22,9 +22,10 @@ def main():
     E = p / (0.4 * rho) + 0.5 * u**2
     W_init = rho * array( [ 1., u, 0., 0., E ] )
     W_cells[:,:] = W_init[None,:]
+    W_faces[:,:] = W_init[None,:]
 
     t = 0.
-    hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
+    dt = hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
 
     write_vtk("/Users/maitreya/Desktop/pipe-3d-mesh/pipe.vtk", nodes, faces, cells, ghost=False)
 
