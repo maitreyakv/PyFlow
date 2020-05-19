@@ -1,4 +1,4 @@
-from numpy import dtype, float64
+from numpy import dtype, float64, array
 
 # TODO: cleanup and add doc
 
@@ -15,3 +15,6 @@ flow_type = dtype([("rho",   float64),
                    ("c",     float64),
                    ("cp",    float64),
                    ("gamma", float64)])
+
+def get_velocity(flow):
+    return array( [ flow["u"], flow["v"], flow["w"] ] )

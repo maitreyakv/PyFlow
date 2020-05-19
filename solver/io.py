@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from solver.mesh import node_type, face_type, cell_type
 from solver.mesh import create_face, find_or_create_face, create_cell, create_ghost_cell
+from solver.mesh import other_cell_id
 
 # TODO: Cleanup and add doc
 
@@ -97,6 +98,14 @@ def read_gmsh_2(filename):
     for face in faces:
         if face["bc"] > 0:
             next_face_id, next_cell_id = create_ghost_cell(nodes, faces, cells, face, next_face_id, next_cell_id)
+
+    # Find all neighbors of cells
+    for cell in cells:
+        if not cell["ghost"]:
+            cell["nbr1"] = other_cell_id(faces[cell["face1"]], cell)
+            cell["nbr2"] = other_cell_id(faces[cell["face2"]], cell)
+            cell["nbr3"] = other_cell_id(faces[cell["face3"]], cell)
+            cell["nbr4"] = other_cell_id(faces[cell["face4"]], cell)
 
     # Return the nodes, faces, and cells
     return nodes, faces, cells

@@ -33,6 +33,10 @@ cell_type = dtype([("id",    int64),
                    ("face2", int64),
                    ("face3", int64),
                    ("face4", int64),
+                   ("nbr1",  int64),
+                   ("nbr2",  int64),
+                   ("nbr3",  int64),
+                   ("nbr4",  int64),
                    ("rx",    float64),
                    ("ry",    float64),
                    ("rz",    float64),
@@ -40,8 +44,13 @@ cell_type = dtype([("id",    int64),
                    ("ghost", bool)])
 
 #@jit(nopython=True)
-def get_normal(face):
-    return array( [ face["nx"], face["ny"], face["nz"] ] )
+def get_normal(face, ref_point=None):
+    n_ = array( [ face["nx"], face["ny"], face["nz"] ] )
+    if type(ref_point) == type(None):
+        return n_
+    else:
+        r_ = get_centroid(face)
+        return n_ if n_.dot(r_ - ref_point) > 0. else -n_
 
 #@jit(nopython=True)
 def get_centroid(elem):
@@ -62,10 +71,11 @@ def compute_volume(faces, face1, face2, face3, face4):
     r2_ = get_centroid(face2)
     r3_ = get_centroid(face3)
     r4_ = get_centroid(face4)
-    n1_ = get_normal(face1)
-    n2_ = get_normal(face2)
-    n3_ = get_normal(face3)
-    n4_ = get_normal(face4)
+    r_cell_ = ( r1_ + r2_ + r3_ + r4_ ) / 4.
+    n1_ = get_normal(face1, ref_point=r_cell_)
+    n2_ = get_normal(face2, ref_point=r_cell_)
+    n3_ = get_normal(face3, ref_point=r_cell_)
+    n4_ = get_normal(face4, ref_point=r_cell_)
     area1 = face1["area"]
     area2 = face2["area"]
     area3 = face3["area"]
@@ -222,3 +232,18 @@ def create_ghost_cell(nodes, faces, cells, face, next_face_id, next_cell_id):
     next_cell_id = create_cell(nodes, faces, cells, ghost_cell_node_ids, ghost_cell_face_ids, next_cell_id, ghost=True)
     face["right_cell"] = next_cell_id - 1
     return next_face_id, next_cell_id
+
+def find_face_num_in_cell(cell, face):
+    if cell["face1"] == face["id"]:
+        return 1
+    elif cell["face2"] == face["id"]:
+        return 2
+    elif cell["face3"] == face["id"]:
+        return 3
+    elif cell["face4"] == face["id"]:
+        return 4
+    else:
+        print("error: could not find face in cell")
+
+def other_cell_id(face, cell):
+    return face["left_cell"] if face["right_cell"] == cell["id"] else face["right_cell"]
