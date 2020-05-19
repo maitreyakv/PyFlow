@@ -1,4 +1,4 @@
-from numpy import zeros, float64, array
+from numpy import zeros, float64, array, ascontiguousarray, asfortranarray
 from numpy.linalg import lstsq, qr, inv
 from numba import jit
 
@@ -6,22 +6,20 @@ from solver.mesh import get_centroid
 
 # TODO: Add doc and cleanup
 
+@jit(nopython=True)
 def least_squares_gradient(cells, flow_cells):
-    # Compute edge matrices for each cell when function is called for the first time
-    if type(least_squares_gradient.edge_matrices) == type(None):
-        edge_matrices = zeros((cells.size, 4, 3), dtype=float64)
-        R_inv_Q_t = zeros((cells.size, 3, 4), dtype=float64)
-        for cell in cells:
-            if not cell["ghost"]:
-                r_cell_ = get_centroid(cell)
-                edge_matrices[cell["id"],0,:] = get_centroid(cells[cell["nbr1"]]) - r_cell_
-                edge_matrices[cell["id"],1,:] = get_centroid(cells[cell["nbr2"]]) - r_cell_
-                edge_matrices[cell["id"],2,:] = get_centroid(cells[cell["nbr3"]]) - r_cell_
-                edge_matrices[cell["id"],3,:] = get_centroid(cells[cell["nbr4"]]) - r_cell_
-                Q, R = qr(edge_matrices[cell["id"],:,:])
-                R_inv_Q_t[cell["id"],:,:] = inv(R) @ Q.T
-        least_squares_gradient.edge_matrices = edge_matrices
-        least_squares_gradient.R_inv_Q_t = R_inv_Q_t
+    # Compute edge matrices for each cell
+    QR_fac = zeros((cells.size, 3, 4), dtype=float64)
+    for cell in cells:
+        if not cell["ghost"]:
+            edge_matrix = zeros((4, 3), dtype=float64)
+            r_cell_ = get_centroid(cell)
+            edge_matrix[0,:] = get_centroid(cells[cell["nbr1"]]) - r_cell_
+            edge_matrix[1,:] = get_centroid(cells[cell["nbr2"]]) - r_cell_
+            edge_matrix[2,:] = get_centroid(cells[cell["nbr3"]]) - r_cell_
+            edge_matrix[3,:] = get_centroid(cells[cell["nbr4"]]) - r_cell_
+            Q, R = qr(edge_matrix)
+            QR_fac[cell["id"],:,:] = ascontiguousarray( inv(R) ) @ ascontiguousarray( Q.T )
 
     # Allocate arrays for the gradients
     grads = zeros((cells.size, 4, 3), dtype=float64)
@@ -51,15 +49,13 @@ def least_squares_gradient(cells, flow_cells):
                               flow_nbr3["T"] - flow_cell["T"],
                               flow_nbr4["T"] - flow_cell["T"] ] )
 
-            #edge_matrix = least_squares_gradient.edge_matrices[cell["id"]]
-            R_inv_Q_t = least_squares_gradient.R_inv_Q_t[cell["id"],:,:]
+            #R_inv_Q_t = zeros((3, 4), dtype=float64)
+            R_inv_Q_t = ascontiguousarray( QR_fac[cell["id"],:,:] )
 
-            grads[cell["id"],0,:] = R_inv_Q_t @ diff_u #lstsq(edge_matrix, diff_u, rcond=None)[0]
-            grads[cell["id"],1,:] = R_inv_Q_t @ diff_v #lstsq(edge_matrix, diff_v, rcond=None)[0]
-            grads[cell["id"],2,:] = R_inv_Q_t @ diff_w #lstsq(edge_matrix, diff_w, rcond=None)[0]
-            grads[cell["id"],3,:] = R_inv_Q_t @ diff_T #lstsq(edge_matrix, diff_T, rcond=None)[0]
+            grads[cell["id"],0,:] = R_inv_Q_t @ diff_u
+            grads[cell["id"],1,:] = R_inv_Q_t @ diff_v
+            grads[cell["id"],2,:] = R_inv_Q_t @ diff_w
+            grads[cell["id"],3,:] = R_inv_Q_t @ diff_T
 
     # Return the computed gradients
     return grads
-
-least_squares_gradient.edge_matrices = None

@@ -26,7 +26,7 @@ def main():
     W_faces[:,:] = W_init[None,:]
 
     t = 0.
-    num_iter = 4
+    num_iter = 20
     start_time = time()
     for iter in range(num_iter):
         dt = hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
