@@ -1,7 +1,6 @@
 from numpy import sqrt
 from numpy.linalg import norm
-
-#from numba import jit
+from numba import jit
 
 # TODO: Add doc and cleanup
 
@@ -21,7 +20,7 @@ def rho(p, T, thermo="cpg", opts=None):
     else:
         print("error: unrecognized thermodynamics: " + thermo)
 
-#@jit(nopython=True)
+@jit(nopython=True)
 def update_flow(flow, W, thermo="cpg", opts=None):
     flow["rho"][:] = W[:,0]
     flow["u"][:]   = W[:,1] / flow["rho"]

@@ -1,5 +1,6 @@
 from numpy import zeros, float64, array
 from numpy.linalg import lstsq, qr, inv
+from numba import jit
 
 from solver.mesh import get_centroid
 

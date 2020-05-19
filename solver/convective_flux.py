@@ -1,9 +1,11 @@
 from numpy import zeros, float64, where
+from numba import jit
 
 from solver.thermo import update_flow
 from solver.mesh import get_normal, find_face_num_in_cell
 from solver.flow import get_velocity
 
+@jit(nopython=True)
 def central_scheme_convective_fluxes(faces, cells, W_faces, W_cells, flow_faces, Fc, thermo="cpg", opts=None):
     # Compute conservative variables on interior faces
     for face in faces:

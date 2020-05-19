@@ -1,11 +1,13 @@
 from numpy import zeros, float64
 from numpy.linalg import norm
+from numba import jit
 
 from solver.mesh import get_centroid, get_normal, find_face_num_in_cell
 from solver.flow import get_velocity
 
 # TODO: Add doc and cleanup
 
+@jit(nopython=True)
 def gradient_avg_viscous_fluxes(faces, cells, flow_faces, flow_cells, grads, Fv):
     # Compute viscous fluxes across all real faces
     for face in faces:

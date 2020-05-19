@@ -1,6 +1,6 @@
-from numpy import int64, float64, dtype, array_equal, sort, min, nonzero, array, amax, any
+from numpy import int64, float64, dtype, array_equal, sort, min, nonzero, array, amax, any, nan, isnan
 from numpy.linalg import norm
-#from numba import jit
+from numba import jit
 
 from solver.util import fast_cross
 
@@ -43,14 +43,16 @@ cell_type = dtype([("id",    int64),
                    ("vol",   float64),
                    ("ghost", bool)])
 
-def get_normal(face, ref_point=None):
+@jit(nopython=True)
+def get_normal(face, ref_point=array([nan])):
     n_ = array( [ face["nx"], face["ny"], face["nz"] ] )
-    if not any(ref_point):
+    if isnan(ref_point[0]):
         return n_
     else:
         r_ = get_centroid(face)
         return n_ if n_.dot(r_ - ref_point) > 0. else -n_
 
+@jit(nopython=True)
 def get_centroid(elem):
     return array( [ elem["rx"], elem["ry"], elem["rz"] ] )
 
@@ -229,6 +231,7 @@ def create_ghost_cell(nodes, faces, cells, face, next_face_id, next_cell_id):
     face["right_cell"] = next_cell_id - 1
     return next_face_id, next_cell_id
 
+@jit(nopython=True)
 def find_face_num_in_cell(cell, face):
     if cell["face1"] == face["id"]:
         return 1

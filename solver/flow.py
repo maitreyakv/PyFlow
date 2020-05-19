@@ -1,4 +1,5 @@
 from numpy import dtype, float64, array
+from numba import jit
 
 # TODO: cleanup and add doc
 
@@ -16,5 +17,6 @@ flow_type = dtype([("rho",   float64),
                    ("cp",    float64),
                    ("gamma", float64)])
 
+@jit(nopython=True)
 def get_velocity(flow):
     return array( [ flow["u"], flow["v"], flow["w"] ] )
