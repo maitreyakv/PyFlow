@@ -1,11 +1,27 @@
 from numpy import sqrt
 from numpy.linalg import norm
 
-from numba import jit
+#from numba import jit
 
 # TODO: Add doc and cleanup
 
-@jit(nopython=True)
+#@jit(nopython=True)
+def E(p, rho, v_, thermo="cpg", opts=None):
+    if "cpg" in thermo:
+        gamma = opts["gamma"]
+        return p / ((gamma - 1.) * rho) + 0.5 * norm(v_)**2
+    else:
+        print("error: unrecognized thermodynamics: " + thermo)
+
+#@jit(nopython=True)
+def rho(p, T, thermo="cpg", opts=None):
+    if "cpg" in thermo:
+        R = opts["R"]
+        return p / (R * T)
+    else:
+        print("error: unrecognized thermodynamics: " + thermo)
+
+#@jit(nopython=True)
 def update_flow(flow, W, thermo="cpg", opts=None):
     flow["rho"][:] = W[:,0]
     flow["u"][:]   = W[:,1] / flow["rho"]

@@ -101,7 +101,7 @@ def read_gmsh_2(filename):
     # Return the nodes, faces, and cells
     return nodes, faces, cells
 
-def write_vtk(filename, nodes, faces, cells):
+def write_vtk(filename, nodes, faces, cells, ghost=False):
     fp = open(filename, "w")
 
     fp.write("# vtk DataFile Version 2.0\ncomment goes here\nASCII\nDATASET UNSTRUCTURED_GRID\n\n")
@@ -110,10 +110,16 @@ def write_vtk(filename, nodes, faces, cells):
     for node in nodes:
         fp.write("{} {} {}".format(node["rx"], node["ry"], node["rz"]) + "\n")
 
-    fp.write("\nCELLS {} {}\n".format(cells.size, 5 * cells.size))
-    for cell in cells:
-        fp.write("4 " + "{} {} {} {}".format(cell["node1"], cell["node2"], cell["node3"], cell["node4"]) + "\n")
+    if ghost:
+        num_cells_to_write = cells.size
+    else:
+        num_cells_to_write = cells[cells["ghost"] == False].size
 
-    fp.write("\nCELL_TYPES {}\n".format(cells.size) + "10\n" * cells.size)
+    fp.write("\nCELLS {} {}\n".format(num_cells_to_write, 5 * num_cells_to_write))
+    for cell in cells:
+        if (cell["ghost"] and ghost) or not cell["ghost"]:
+            fp.write("4 " + "{} {} {} {}".format(cell["node1"], cell["node2"], cell["node3"], cell["node4"]) + "\n")
+
+    fp.write("\nCELL_TYPES {}\n".format(num_cells_to_write) + "10\n" * num_cells_to_write)
 
     fp.close()

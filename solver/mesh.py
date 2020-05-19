@@ -1,6 +1,6 @@
 from numpy import int64, float64, dtype, array_equal, sort, min, nonzero, array, amax, any
 from numpy.linalg import norm
-from numba import jit
+#from numba import jit
 
 from solver.util import fast_cross
 
@@ -39,25 +39,33 @@ cell_type = dtype([("id",    int64),
                    ("vol",   float64),
                    ("ghost", bool)])
 
-@jit(nopython=True)
+#@jit(nopython=True)
+def get_normal(face):
+    return array( [ face["nx"], face["ny"], face["nz"] ] )
+
+#@jit(nopython=True)
+def get_centroid(elem):
+    return array( [ elem["rx"], elem["ry"], elem["rz"] ] )
+
+#@jit(nopython=True)
 def compute_area_and_normal(nodes, node1, node2, node3):
-    vtx_1 = array( [ node1["rx"], node1["ry"], node1["rz"] ] )
-    vtx_2 = array( [ node2["rx"], node2["ry"], node2["rz"] ] )
-    vtx_3 = array( [ node3["rx"], node3["ry"], node3["rz"] ] )
+    vtx_1 = get_centroid(node1)
+    vtx_2 = get_centroid(node2)
+    vtx_3 = get_centroid(node3)
     area_ = fast_cross(vtx_2 - vtx_1, vtx_3 - vtx_1)
     n_ = area_ / norm(area_)
     return norm(area_), n_[0], n_[1], n_[2]
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def compute_volume(faces, face1, face2, face3, face4):
-    r1_ = array( [ face1["rx"], face1["ry"], face1["rz"] ] )
-    r2_ = array( [ face2["rx"], face2["ry"], face2["rz"] ] )
-    r3_ = array( [ face3["rx"], face3["ry"], face3["rz"] ] )
-    r4_ = array( [ face4["rx"], face4["ry"], face4["rz"] ] )
-    n1_ = array( [ face1["nx"], face1["ny"], face1["nz"] ] )
-    n2_ = array( [ face2["nx"], face2["ny"], face2["nz"] ] )
-    n3_ = array( [ face3["nx"], face3["ny"], face3["nz"] ] )
-    n4_ = array( [ face4["nx"], face4["ny"], face4["nz"] ] )
+    r1_ = get_centroid(face1)
+    r2_ = get_centroid(face2)
+    r3_ = get_centroid(face3)
+    r4_ = get_centroid(face4)
+    n1_ = get_normal(face1)
+    n2_ = get_normal(face2)
+    n3_ = get_normal(face3)
+    n4_ = get_normal(face4)
     area1 = face1["area"]
     area2 = face2["area"]
     area3 = face3["area"]
@@ -158,9 +166,9 @@ def create_cell(nodes, faces, cells, cell_node_ids, cell_face_ids, next_cell_id,
     return next_cell_id + 1
 
 def set_cell_of_face(face, cell):
-    n_      = array( [ face["nx"], face["ny"], face["nz"] ] )
-    r_face_ = array( [ face["rx"], face["ry"], face["rz"] ] )
-    r_cell_ = array( [ cell["rx"], cell["ry"], cell["rz"] ] )
+    n_      = get_normal(face)
+    r_face_ = get_centroid(face)
+    r_cell_ = get_centroid(cell)
     if not face["bc"]:
         if n_.dot(r_cell_ - r_face_) > 0.:
             face["right_cell"] = cell["id"]
@@ -177,9 +185,9 @@ def set_cell_of_face(face, cell):
         face["left_cell"] = cell["id"]
 
 def reflect_point(v1_, face, nodes):
-    n_ = array( [ face["nx"], face["ny"], face["nz"] ] )
+    n_ = get_normal(face)
     node1 = nodes[face["node1"]]
-    r_node1_ = array( [ node1["rx"], node1["ry"], node1["rz"] ] )
+    r_node1_ = get_centroid(node1)
     d = -n_.dot(r_node1_)
     u_ = (v1_.dot(n_) + d) * n_
     v_ = v1_ - u_
@@ -196,7 +204,7 @@ def create_ghost_cell(nodes, faces, cells, face, next_face_id, next_cell_id):
         if not (node_id == face["node1"] or node_id == face["node2"] or node_id == face["node3"]):
             node_to_flip_id = node_id
     node_to_flip = nodes[node_to_flip_id]
-    point_to_flip = array( [ node_to_flip["rx"], node_to_flip["ry"], node_to_flip["rz"] ] )
+    point_to_flip = get_centroid(node_to_flip)
     new_point = reflect_point(point_to_flip, face, nodes)
     ghost_node_id = amax(nodes["id"]) + 1
     nodes[ghost_node_id]["id"] = ghost_node_id
