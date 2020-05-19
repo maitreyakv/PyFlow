@@ -1,10 +1,8 @@
-from numpy import zeros, float64
-from numba.core import types
-from numba.typed import Dict
+from numpy import zeros, float64, array
 
 from solver.io import read_gmsh_2, write_vtk
 from solver.flow import flow_type
-from solver.thermo import update_flow
+from solver.integration import hybrid_multi_stage_integrate
 
 def main():
     nodes, faces, cells = read_gmsh_2("/Users/maitreya/Desktop/pipe-3d-mesh/pipe.msh")
@@ -16,18 +14,19 @@ def main():
     W_cells = zeros((cells.size, num_cons_var), dtype=float64)
     W_faces = zeros((cells.size, num_cons_var), dtype=float64)
 
-    thermo = "cpg"
-    thermo_opts = Dict.empty(
-        key_type=types.unicode_type,
-        value_type=types.float64,
-    )
-    thermo_opts["gamma"] = 1.4
-    thermo_opts["Pr"] = 0.72
-    thermo_opts["R"] = 287.058
+    # TEMP: Pipe flow initial conditions
+    u = 1.
+    T = 273.
+    p = 101325.
+    rho = p / (287.058 * T)
+    E = p / (0.4 * rho) + 0.5 * u**2
+    W_init = rho * array( [ 1., u, 0., 0., E ] )
+    W_cells[:,:] = W_init[None,:]
 
-    update_flow(flow_cells, W_cells, thermo=thermo, opts=thermo_opts)
+    t = 0.
+    hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
 
-    write_vtk("/Users/maitreya/Desktop/pipe-3d-mesh/pipe.vtk", nodes, faces, cells)
+    write_vtk("/Users/maitreya/Desktop/pipe-3d-mesh/pipe.vtk", nodes, faces, cells, ghost=False)
 
 if __name__ == "__main__":
     main()
