@@ -1,4 +1,4 @@
-from numpy import zeros, float64, abs, sum
+from numpy import zeros, float64, abs, sum, inf
 from numba.core import types
 from numba.typed import Dict
 
@@ -108,7 +108,7 @@ def hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, 
     Rc0, Rd0 = compute_residual(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
 
     # Compute time step
-    dt = 1.e10
+    dt = inf
     for cell in cells:
         if not cell["ghost"]:
             cell_id = cell["id"]
