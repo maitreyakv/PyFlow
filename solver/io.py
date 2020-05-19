@@ -1,10 +1,10 @@
 from itertools import combinations
 
-from numpy import zeros, fromiter, int64, take, mean, array
+from numpy import zeros, fromiter, int64, take, mean, array, concatenate
 from tqdm import tqdm
 
 from solver.mesh import node_type, face_type, cell_type
-from solver.mesh import create_face, find_or_create_face, create_cell
+from solver.mesh import create_face, find_or_create_face, create_cell, create_ghost_cell
 
 # TODO: Cleanup and add doc
 
@@ -19,19 +19,6 @@ def read_gmsh_2(filename):
     # Open mesh file
     fp = open(filename, 'r')
 
-    # Read until the start of the groups
-    read_until(fp, "$PhysicalNames")
-
-    # Read the number of groups in the mesh
-    num_groups = int( fp.readline().strip() )
-
-    # Read each group from the file into the dictionary
-    groups = {}
-    for i in range(num_groups):
-        line = fp.readline().strip().split(" ")
-        if line[0] == "2":
-            groups[ int(line[1]) ] = line[2]
-
     # Read lines until the start of the nodes
     read_until(fp, "$Nodes")
 
@@ -45,7 +32,9 @@ def read_gmsh_2(filename):
     for i in range(num_nodes):
         line = fp.readline().strip().split(" ")
         nodes[i]["id"] = i
-        nodes[i]["r_"] = line[1:]
+        nodes[i]["rx"] = line[1]
+        nodes[i]["ry"] = line[2]
+        nodes[i]["rz"] = line[3]
 
     # Read lines until the start of the Elements
     read_until(fp, "$Elements")
@@ -79,24 +68,35 @@ def read_gmsh_2(filename):
     for elem in tqdm(elem_lines):
         if elem[1] == '2': # Create boundary face
             # Find the IDs of the nodes of the boundary face
-            face_nodes = fromiter(map(int, elem[-3:]), dtype=int64) - 1
+            face_node_ids = fromiter(map(int, elem[-3:]), dtype=int64) - 1
 
             # Create the boundary face
-            next_face_id = create_face(nodes, faces, face_nodes, next_face_id)
+            bc = int(elem[-4])
+            next_face_id = create_face(nodes, faces, face_node_ids, next_face_id, bc=bc)
 
         elif elem[1] == '4': # Create cell
             # Find the IDs of the nodes of the cell
-            cell_nodes = fromiter(map(int, elem[-4:]), dtype=int64) - 1
+            cell_node_ids = fromiter(map(int, elem[-4:]), dtype=int64) - 1
 
-            cell_faces = []
-            for face_nodes in combinations(cell_nodes, 3):
-                found_face, next_face_id = find_or_create_face(nodes, faces, array(face_nodes), next_face_id)
-                cell_faces.append(found_face)
+            cell_face_ids = []
+            for face_node_ids in combinations(cell_node_ids, 3):
+                found_face_id, next_face_id = find_or_create_face(nodes, faces, array(face_node_ids), next_face_id)
+                cell_face_ids.append(found_face_id)
 
-            next_cell_id = create_cell(nodes, faces, cells, cell_nodes, cell_faces, next_cell_id)
+            next_cell_id = create_cell(nodes, faces, cells, cell_node_ids, cell_face_ids, next_cell_id)
 
     # Close mesh file
     fp.close()
+
+    # Allocate additional space for ghost nodes, ghost_faces, and ghost_cells
+    nodes = concatenate((nodes, zeros(num_bndry_faces, dtype=node_type)), axis=0)
+    cells = concatenate((cells, zeros(num_bndry_faces, dtype=cell_type)), axis=0)
+    faces = concatenate((faces, zeros(3*num_bndry_faces, dtype=face_type)), axis=0)
+
+    # Create ghost cells
+    for face in faces:
+        if face["bc"] > 0:
+            next_face_id, next_cell_id = create_ghost_cell(nodes, faces, cells, face, next_face_id, next_cell_id)
 
     # Return the nodes, faces, and cells
     return nodes, faces, cells
@@ -107,12 +107,12 @@ def write_vtk(filename, nodes, faces, cells):
     fp.write("# vtk DataFile Version 2.0\ncomment goes here\nASCII\nDATASET UNSTRUCTURED_GRID\n\n")
 
     fp.write("POINTS {} double\n".format(len(nodes)))
-    for id in range(nodes.size):
-        fp.write(" ".join(map(str, nodes[id]["r_"].tolist())) + "\n")
+    for node in nodes:
+        fp.write("{} {} {}".format(node["rx"], node["ry"], node["rz"]) + "\n")
 
     fp.write("\nCELLS {} {}\n".format(cells.size, 5 * cells.size))
-    for id in range(cells.size):
-        fp.write("4 " + " ".join(map(str, cells[id]["nodes"])) + "\n")
+    for cell in cells:
+        fp.write("4 " + "{} {} {} {}".format(cell["node1"], cell["node2"], cell["node3"], cell["node4"]) + "\n")
 
     fp.write("\nCELL_TYPES {}\n".format(cells.size) + "10\n" * cells.size)
 
