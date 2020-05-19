@@ -1,4 +1,5 @@
 from numpy import zeros, float64, array
+from time import time
 
 from solver.io import read_gmsh_2, write_vtk
 from solver.flow import flow_type
@@ -25,7 +26,16 @@ def main():
     W_faces[:,:] = W_init[None,:]
 
     t = 0.
-    dt = hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
+    num_iter = 4
+    start_time = time()
+    for iter in range(num_iter):
+        dt = hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t)
+        t += dt
+        print("iter {}, t={}, dt={}".format(iter, t, dt))
+    end_time = time()
+    iter_time = end_time - start_time
+    print("total iteration time = {} sec".format(iter_time))
+    print("time per iteration {} sec".format(iter_time / num_iter))
 
     write_vtk("/Users/maitreya/Desktop/pipe-3d-mesh/pipe.vtk", nodes, faces, cells, ghost=False)
 

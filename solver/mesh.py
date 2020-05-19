@@ -43,20 +43,17 @@ cell_type = dtype([("id",    int64),
                    ("vol",   float64),
                    ("ghost", bool)])
 
-#@jit(nopython=True)
 def get_normal(face, ref_point=None):
     n_ = array( [ face["nx"], face["ny"], face["nz"] ] )
-    if type(ref_point) == type(None):
+    if not any(ref_point):
         return n_
     else:
         r_ = get_centroid(face)
         return n_ if n_.dot(r_ - ref_point) > 0. else -n_
 
-#@jit(nopython=True)
 def get_centroid(elem):
     return array( [ elem["rx"], elem["ry"], elem["rz"] ] )
 
-#@jit(nopython=True)
 def compute_area_and_normal(nodes, node1, node2, node3):
     vtx_1 = get_centroid(node1)
     vtx_2 = get_centroid(node2)
@@ -65,7 +62,6 @@ def compute_area_and_normal(nodes, node1, node2, node3):
     n_ = area_ / norm(area_)
     return norm(area_), n_[0], n_[1], n_[2]
 
-#@jit(nopython=True)
 def compute_volume(faces, face1, face2, face3, face4):
     r1_ = get_centroid(face1)
     r2_ = get_centroid(face2)
