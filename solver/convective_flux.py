@@ -10,6 +10,7 @@ def central_scheme_convective_fluxes(faces, cells, W_faces, W_cells, flow_faces,
     # Compute conservative variables on interior faces
     for face in faces:
         # Update conservative variables on interior face using average of cell values
+        # TODO: Maybe use weighted average
         if face["bc"] == 0:
             face_id = face["id"]
             left_cell_id = face["left_cell"]

@@ -9,6 +9,7 @@ from solver.mesh import get_centroid
 @jit(nopython=True)
 def least_squares_gradient(cells, flow_cells):
     # Compute edge matrices for each cell
+    # TODO: Make this a one time calculation instead of every function call
     QR_fac = zeros((cells.size, 3, 4), dtype=float64)
     for cell in cells:
         if not cell["ghost"]:
