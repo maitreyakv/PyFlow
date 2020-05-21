@@ -1,4 +1,5 @@
 from numpy import zeros, float64, abs, sum, inf
+from numpy.linalg import norm
 from numba.core import types
 from numba.typed import Dict
 
@@ -40,6 +41,39 @@ def compute_residual(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t):
     # Compute and store convective fluxes
     central_scheme_convective_fluxes(faces, cells, W_faces, W_cells, flow_faces, Fc, thermo="cpg", opts=thermo_opts)
 
+    # TEMP: Debugging
+    """
+    #for cell in cells:
+    #    if not cell["ghost"]:
+    #        print( W_cells[cell["id"]][1:4] )
+    #for face in faces:
+    #    if face["bc"] >= 0:
+    #        print(face["bc"], get_velocity(flow_faces[face["id"]]))
+
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    from numpy import array, sum, any, all
+    areas = [ array([ faces[cells[i]["face1"]]["area"],
+                      faces[cells[i]["face2"]]["area"],
+                      faces[cells[i]["face3"]]["area"],
+                      faces[cells[i]["face4"]]["area"] ] ) for i in range(cells.size) ]
+    areas = array(areas)
+    mask1 = [ array([ faces[cells[i]["face1"]]["bc"] == 0,
+                      faces[cells[i]["face2"]]["bc"] == 0,
+                      faces[cells[i]["face3"]]["bc"] == 0,
+                      faces[cells[i]["face4"]]["bc"] == 0 ] ) for i in range(cells.size) ]
+    mask2 = [ array([ faces[cells[i]["face1"]]["bc"] not in [2,3],
+                      faces[cells[i]["face2"]]["bc"] not in [2,3],
+                      faces[cells[i]["face3"]]["bc"] not in [2,3],
+                      faces[cells[i]["face4"]]["bc"] not in [2,3] ] ) for i in range(cells.size) ]
+    #mask = any(array(mask1), axis=1) & ~all(array(mask2), axis=1) & ~cells["ghost"]
+    mask = ~cells["ghost"]
+    val = 7.7785e-05 * sum( Fc[:,:,:] * areas[:,:,None], axis=1 ) / cells["vol"][:,None]
+    sns.distplot(val[mask,1], rug=True, kde=False)
+    plt.show()
+    exit()
+    """
+
     # TODO: Add artificial dissipation
 
     # Compute gradients
@@ -53,9 +87,9 @@ def compute_residual(faces, cells, flow_faces, flow_cells, W_faces, W_cells, t):
         if not cell["ghost"]:
             cell_id = cell["id"]
             area1 = faces[cell["face1"]]["area"]
-            area2 = faces[cell["face1"]]["area"]
-            area3 = faces[cell["face1"]]["area"]
-            area4 = faces[cell["face1"]]["area"]
+            area2 = faces[cell["face2"]]["area"]
+            area3 = faces[cell["face3"]]["area"]
+            area4 = faces[cell["face4"]]["area"]
             Rc[cell_id,:] += Fc[cell_id,0,:] * area1 \
                            + Fc[cell_id,1,:] * area2 \
                            + Fc[cell_id,2,:] * area3 \
@@ -139,6 +173,14 @@ def hybrid_multi_stage_integrate(faces, cells, flow_faces, flow_cells, W_faces, 
     Rd42 = beta5 * Rd4 + (1. - beta5)*Rd20
     W_cells[:,:] = W_cells - alpha5 * dt * (Rc4 - Rd42) / cells["vol"][:,None]
 
-    return dt
+    # Compute residual of last stage and L2 norm
+    # TEMP: Debugging
+    res = dt * (Rc0 - Rd0) / cells["vol"][:,None] #Rc4 - Rd42
+    res_L2_norm = norm(res, axis=0)
+
+    # Perform final update of flow in all cells
+    update_flow(flow_cells, W_cells, thermo=thermo, opts=thermo_opts)
+
+    return dt, res_L2_norm
 
 hybrid_multi_stage_integrate.area_proj = None

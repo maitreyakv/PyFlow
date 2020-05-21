@@ -5,19 +5,19 @@ def apply_bndry_cond(faces, cells, W_faces, W_cells, flow_cells, t, thermo="cpg"
     for face in faces:
         if face["bc"] > 0:
             inter_cell = cells[face["left_cell"]]
-            ghost_cell = cells[face["left_cell"]]
+            ghost_cell = cells[face["right_cell"]]
             W_bndry_face = W_faces[face["id"]]
             W_inter_cell = W_cells[inter_cell["id"]]
             W_ghost_cell = W_cells[ghost_cell["id"]]
             flow_inter_cell = flow_cells[inter_cell["id"]]
 
-            if face["bc"] == 1: # TEMP: Wall bc implementation
+            if face["bc"] in [3,4,5,6]: # TEMP: Wall bc implementation
                 slip_wall_bc(face, inter_cell, ghost_cell, W_bndry_face, W_inter_cell,
                              W_ghost_cell, flow_inter_cell, t, thermo=thermo, opts=opts)
-            elif face["bc"] == 2: # TEMP: Outlet bc implementation
+            elif face["bc"] == [2]: # TEMP: Outlet bc implementation
                 outlet_bc(face, inter_cell, ghost_cell, W_bndry_face, W_inter_cell,
                           W_ghost_cell, flow_inter_cell, t, thermo=thermo, opts=opts)
-            elif face["bc"] == 3: # TEMP: Injection bc implementation
+            elif face["bc"] == [1]: # TEMP: Injection bc implementation
                 injection_bc(face, inter_cell, ghost_cell, W_bndry_face, W_inter_cell,
                              W_ghost_cell, flow_inter_cell, t, thermo=thermo, opts=opts)
             else:
@@ -92,7 +92,7 @@ def injection_bc(bndry_face, inter_cell, ghost_cell, W_bndry_face, W_inter_cell,
 
     # Compute boundary velocity
     # TEMP: Hardcoded mass flow/velocity
-    v_bndry_ = -n_ * 1.
+    v_bndry_ = -n_ * 100.
 
     # Compute boundary energy
     E_bndry = E(p_bndry, rho_bndry, v_bndry_, thermo=thermo, opts=opts)
