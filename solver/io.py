@@ -6,6 +6,7 @@ from tqdm import tqdm
 from solver.mesh import node_type, face_type, cell_type
 from solver.mesh import create_face, find_or_create_face, create_cell, create_ghost_cell
 from solver.mesh import other_cell_id
+from solver.flow import get_velocity
 
 # TODO: Cleanup and add doc
 
@@ -110,7 +111,7 @@ def read_gmsh_2(filename):
     # Return the nodes, faces, and cells
     return nodes, faces, cells
 
-def write_vtk(filename, nodes, faces, cells, ghost=False):
+def write_vtk(filename, nodes, faces, cells, flow_cells, ghost=False):
     fp = open(filename, "w")
 
     fp.write("# vtk DataFile Version 2.0\ncomment goes here\nASCII\nDATASET UNSTRUCTURED_GRID\n\n")
@@ -130,5 +131,22 @@ def write_vtk(filename, nodes, faces, cells, ghost=False):
             fp.write("4 " + "{} {} {} {}".format(cell["node1"], cell["node2"], cell["node3"], cell["node4"]) + "\n")
 
     fp.write("\nCELL_TYPES {}\n".format(num_cells_to_write) + "10\n" * num_cells_to_write)
+
+    fp.write("CELL_DATA {}\n".format(num_cells_to_write))
+
+    scalar_var_dict = [("p","pressure"),
+                       ("rho","density"),
+                       ("T","temperature")]
+    for var, name in scalar_var_dict:
+        fp.write("\nSCALARS {} double 1\nLOOKUP_TABLE default\n".format(name))
+        for cell in cells:
+            if (cell["ghost"] and ghost) or not cell["ghost"]:
+                fp.write("{}\n".format(flow_cells[cell["id"]][var]))
+
+    fp.write("\nVECTORS velocity double\n")
+    for cell in cells:
+        if (cell["ghost"] and ghost) or not cell["ghost"]:
+            v_ = get_velocity(flow_cells[cell["id"]])
+            fp.write("{} {} {}\n".format(*v_))
 
     fp.close()
